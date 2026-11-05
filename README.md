@@ -2,7 +2,7 @@
 
 서류가 수정·반려되거나 문서가 어긋날 때, 기록을 결과에서 원인으로 거꾸로 따라가 문제가 처음 생긴 단계를 찾고, 양식·규칙을 고쳐 같은 문제가 다시 생기지 않게 하는 시스템입니다. 도메인은 포워딩·물류(부킹, SI, 인보이스, 패킹리스트, B/L)입니다.
 
-- 시연: https://trace-to-fix.vercel.app (가상 시드 데이터)
+- 시연: https://trace-to-fix.vercel.app (가상 시드 데이터). `main` 브랜치에 push하면 Vercel에 자동 배포됩니다.
 - 사양 변경·추가 기록: [`docs/spec-addendum.md`](docs/spec-addendum.md)
 
 ## 모듈
