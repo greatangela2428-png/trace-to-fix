@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* 눈이 편한 색 체계: 채도를 낮춘 강조색, 순백·순흑 대신 미색·먹색.
+   색은 모두 여기서만 정의하고, 컴포넌트는 의미 이름(bg-surface, text-ink 등)만 쓴다. */
+
+/* 다크가 기본(사양). 보는 사람이 밝은 화면을 쓰거나 직접 고르면 밝은 테마. */
+:root {
+  --bg: #1b1d21;
+  --surface: #23262b;
+  --surface-2: #2b2f35;
+  --line: #373c43;
+  --ink: #e4e1da; /* 본문 */
+  --ink-2: #b3afa7; /* 보조 */
+  --ink-3: #85817a; /* 흐림 */
+  --accent: #93b4d6;
+  --on-accent: #15191e;
+  --danger: #e4907f;
+  --danger-soft: rgb(228 144 127 / 0.13);
+  --warn: #d8b06a;
+  --warn-soft: rgb(216 176 106 / 0.12);
+  --ok: #92c19f;
+  --ok-soft: rgb(146 193 159 / 0.11);
+  --info: #93b4d6;
+  --info-soft: rgb(147 180 214 / 0.12);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f2ed;
+    --surface: #fffdf9;
+    --surface-2: #f0ece4;
+    --line: #e0dbd1;
+    --ink: #2b2a27;
+    --ink-2: #5d5952;
+    --ink-3: #8a857c;
+    --accent: #3e6c99;
+    --on-accent: #ffffff;
+    --danger: #b0503e;
+    --danger-soft: rgb(176 80 62 / 0.09);
+    --warn: #93650f;
+    --warn-soft: rgb(147 101 15 / 0.1);
+    --ok: #3c7550;
+    --ok-soft: rgb(60 117 80 / 0.09);
+    --info: #3e6c99;
+    --info-soft: rgb(62 108 153 / 0.09);
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f2ed;
+  --surface: #fffdf9;
+  --surface-2: #f0ece4;
+  --line: #e0dbd1;
+  --ink: #2b2a27;
+  --ink-2: #5d5952;
+  --ink-3: #8a857c;
+  --accent: #3e6c99;
+  --on-accent: #ffffff;
+  --danger: #b0503e;
+  --danger-soft: rgb(176 80 62 / 0.09);
+  --warn: #93650f;
+  --warn-soft: rgb(147 101 15 / 0.1);
+  --ok: #3c7550;
+  --ok-soft: rgb(60 117 80 / 0.09);
+  --info: #3e6c99;
+  --info-soft: rgb(62 108 153 / 0.09);
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  letter-spacing: -0.005em;
+  word-break: keep-all; /* 한글을 단어 단위로 줄바꿈 */
+  overflow-wrap: anywhere; /* 긴 영문 주소는 넘치지 않게 */
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 좌우 여백: 최소 16px, 휴대폰 가장자리(안전 영역)도 피한다 */
+.gutter {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 640px) {
+  .gutter {
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

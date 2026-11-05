@@ -1,0 +1,66 @@
+[
+  { "caseId": "C01", "stage": "BOOKING",  "field": "consigneeAddress", "value": "", "at": "2026-09-02T09:00:00+09:00" },
+  { "caseId": "C01", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "", "at": "2026-09-04T09:00:00+09:00" },
+  { "caseId": "C01", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-09-06T09:00:00+09:00" },
+  { "caseId": "C01", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-09-08T09:00:00+09:00" },
+
+  { "caseId": "C02", "stage": "BOOKING",  "field": "consigneeAddress", "value": "", "at": "2026-09-08T09:00:00+09:00" },
+  { "caseId": "C02", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "", "at": "2026-09-10T09:00:00+09:00" },
+  { "caseId": "C02", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-09-12T09:00:00+09:00" },
+  { "caseId": "C02", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-09-14T09:00:00+09:00" },
+
+  { "caseId": "C03", "stage": "BOOKING",  "field": "consigneeAddress", "value": "", "at": "2026-09-15T09:00:00+09:00" },
+  { "caseId": "C03", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "", "at": "2026-09-17T09:00:00+09:00" },
+  { "caseId": "C03", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-09-19T09:00:00+09:00" },
+  { "caseId": "C03", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-09-21T09:00:00+09:00" },
+
+  { "caseId": "C04", "stage": "BOOKING",  "field": "consigneeAddress", "value": "", "at": "2026-09-22T09:00:00+09:00" },
+  { "caseId": "C04", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "", "at": "2026-09-24T09:00:00+09:00" },
+  { "caseId": "C04", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-09-26T09:00:00+09:00" },
+  { "caseId": "C04", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-09-28T09:00:00+09:00" },
+
+  { "caseId": "C05", "stage": "BOOKING",  "field": "consigneeAddress", "value": "", "at": "2026-10-01T09:00:00+09:00" },
+  { "caseId": "C05", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "", "at": "2026-10-03T09:00:00+09:00" },
+  { "caseId": "C05", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-10-05T09:00:00+09:00" },
+  { "caseId": "C05", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-10-07T09:00:00+09:00" },
+
+  { "caseId": "C06", "stage": "BOOKING",  "field": "consigneeAddress", "value": "Ellerholzdamm 50, 20457 Hamburg, DE", "at": "2026-10-06T09:00:00+09:00" },
+  { "caseId": "C06", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "Ellerholzdamm 50, 20457 Hamburg, DE", "at": "2026-10-08T09:00:00+09:00" },
+  { "caseId": "C06", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-10-10T09:00:00+09:00" },
+  { "caseId": "C06", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-10-12T09:00:00+09:00" },
+
+  { "caseId": "C07", "stage": "BOOKING",  "field": "consigneeAddress", "value": "Maasvlakte Blvd 3, 3199 LZ Rotterdam, NL", "at": "2026-10-13T09:00:00+09:00" },
+  { "caseId": "C07", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "Maasvlakte Blvd 3, 3199 LZ Rotterdam, NL", "at": "2026-10-15T09:00:00+09:00" },
+  { "caseId": "C07", "stage": "SI",       "field": "consigneeAddress", "value": "", "at": "2026-10-17T09:00:00+09:00" },
+  { "caseId": "C07", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "", "at": "2026-10-19T09:00:00+09:00" },
+
+  { "caseId": "C08", "stage": "BOOKING",  "field": "grossWeight", "value": "12,400 KG", "at": "2026-09-10T09:00:00+09:00" },
+  { "caseId": "C08", "stage": "DOC_PREP", "field": "grossWeight", "value": "12,040 KG", "at": "2026-09-12T09:00:00+09:00" },
+  { "caseId": "C08", "stage": "SI",       "field": "grossWeight", "value": "12,040 KG", "at": "2026-09-14T09:00:00+09:00" },
+  { "caseId": "C08", "stage": "BL_DRAFT", "field": "grossWeight", "value": "12,040 KG", "at": "2026-09-16T09:00:00+09:00" },
+
+  { "caseId": "C09", "stage": "BOOKING",  "field": "measurement", "value": "58.000 CBM", "at": "2026-09-18T09:00:00+09:00" },
+  { "caseId": "C09", "stage": "DOC_PREP", "field": "measurement", "value": "2048.25 CFT", "at": "2026-09-20T09:00:00+09:00" },
+  { "caseId": "C09", "stage": "SI",       "field": "measurement", "value": "2048.25 CFT", "at": "2026-09-22T09:00:00+09:00" },
+  { "caseId": "C09", "stage": "BL_DRAFT", "field": "measurement", "value": "2048.25 CFT", "at": "2026-09-24T09:00:00+09:00" },
+
+  { "caseId": "C10", "stage": "BOOKING",  "field": "portOfDischarge", "value": "DEBRV", "at": "2026-09-25T09:00:00+09:00" },
+  { "caseId": "C10", "stage": "DOC_PREP", "field": "portOfDischarge", "value": "DEBRV", "at": "2026-09-27T09:00:00+09:00" },
+  { "caseId": "C10", "stage": "SI",       "field": "portOfDischarge", "value": "DEBRV", "at": "2026-09-29T09:00:00+09:00" },
+  { "caseId": "C10", "stage": "BL_DRAFT", "field": "portOfDischarge", "value": "DEBRV", "at": "2026-10-01T09:00:00+09:00" },
+
+  { "caseId": "C11", "stage": "BOOKING",  "field": "hsCode", "value": "8471.30", "at": "2026-10-08T09:00:00+09:00" },
+  { "caseId": "C11", "stage": "DOC_PREP", "field": "hsCode", "value": "", "at": "2026-10-10T09:00:00+09:00" },
+  { "caseId": "C11", "stage": "SI",       "field": "hsCode", "value": "", "at": "2026-10-12T09:00:00+09:00" },
+  { "caseId": "C11", "stage": "BL_DRAFT", "field": "hsCode", "value": "", "at": "2026-10-14T09:00:00+09:00" },
+
+  { "caseId": "C12", "stage": "BOOKING",  "field": "notifyParty", "value": "SAME AS CONSIGNEE", "at": "2026-10-15T09:00:00+09:00" },
+  { "caseId": "C12", "stage": "DOC_PREP", "field": "notifyParty", "value": "SAME AS CONSIGNEE", "at": "2026-10-17T09:00:00+09:00" },
+  { "caseId": "C12", "stage": "SI",       "field": "notifyParty", "value": "Nordic Freight AB, Goteborg, SE", "at": "2026-10-19T09:00:00+09:00" },
+  { "caseId": "C12", "stage": "BL_DRAFT", "field": "notifyParty", "value": "Nordic Freight AB, Goteborg, SE", "at": "2026-10-21T09:00:00+09:00" },
+
+  { "caseId": "C13", "stage": "BOOKING",  "field": "consigneeAddress", "value": "Am Sandtorkai 41, 20475 Hamburg, DE", "at": "2026-10-20T09:00:00+09:00" },
+  { "caseId": "C13", "stage": "DOC_PREP", "field": "consigneeAddress", "value": "Am Sandtorkai 41, 20475 Hamburg, DE", "at": "2026-10-22T09:00:00+09:00" },
+  { "caseId": "C13", "stage": "SI",       "field": "consigneeAddress", "value": "Am Sandtorkai 41, 20475 Hamburg, DE", "at": "2026-10-24T09:00:00+09:00" },
+  { "caseId": "C13", "stage": "BL_DRAFT", "field": "consigneeAddress", "value": "Am Sandtorkai 41, 20475 Hamburg, DE", "at": "2026-10-26T09:00:00+09:00" }
+]

@@ -1,0 +1,94 @@
+[
+  {
+    "id": "P1", "kind": "APPROVAL", "name": "운임 견적 팀장 승인(USD 3,000 이하)", "dept": "영업팀", "stage": null,
+    "introducedAt": "2019-04-01", "originReason": "2019년 견적 금액 오기재 사고 후 전 건 승인으로 도입", "originRef": "2019-04 영업팀 회의록",
+    "minutesPerRun": 15, "avgWaitHours": 4.5, "lastOutcomeBefore": "2023-03",
+    "usage": [
+      { "month": "2025-11", "executed": 21, "outcome": 0 }, { "month": "2025-12", "executed": 18, "outcome": 0 },
+      { "month": "2026-01", "executed": 19, "outcome": 0 }, { "month": "2026-02", "executed": 17, "outcome": 0 },
+      { "month": "2026-03", "executed": 22, "outcome": 0 }, { "month": "2026-04", "executed": 20, "outcome": 0 },
+      { "month": "2026-05", "executed": 21, "outcome": 0 }, { "month": "2026-06", "executed": 20, "outcome": 0 },
+      { "month": "2026-07", "executed": 19, "outcome": 0 }, { "month": "2026-08", "executed": 18, "outcome": 0 },
+      { "month": "2026-09", "executed": 22, "outcome": 0 }, { "month": "2026-10", "executed": 23, "outcome": 0 }
+    ]
+  },
+  {
+    "id": "P2", "kind": "APPROVAL", "name": "B/L 발행 전 운영팀 최종 승인", "dept": "운영팀", "stage": "BL_DRAFT",
+    "introducedAt": "2021-02-01", "originReason": "B/L 정정 비용 절감", "originRef": "2021-01 운영 개선안",
+    "minutesPerRun": 10, "avgWaitHours": 1.5,
+    "usage": [
+      { "month": "2025-11", "executed": 25, "outcome": 2 }, { "month": "2025-12", "executed": 24, "outcome": 1 },
+      { "month": "2026-01", "executed": 26, "outcome": 0 }, { "month": "2026-02", "executed": 23, "outcome": 2 },
+      { "month": "2026-03", "executed": 25, "outcome": 1 }, { "month": "2026-04", "executed": 27, "outcome": 3 },
+      { "month": "2026-05", "executed": 24, "outcome": 1 }, { "month": "2026-06", "executed": 25, "outcome": 2 },
+      { "month": "2026-07", "executed": 26, "outcome": 1 }, { "month": "2026-08", "executed": 24, "outcome": 2 },
+      { "month": "2026-09", "executed": 25, "outcome": 1 }, { "month": "2026-10", "executed": 26, "outcome": 2 }
+    ]
+  },
+  {
+    "id": "P3", "kind": "APPROVAL", "name": "위험물 선적 승인", "dept": "운영팀", "stage": "BOOKING",
+    "introducedAt": "2015-01-01", "originReason": "위험물 운송 법규 준수", "legalBasis": "위험물 선박운송 및 저장규칙",
+    "minutesPerRun": 60,
+    "usage": [
+      { "month": "2025-12", "executed": 1, "outcome": 0 }, { "month": "2026-03", "executed": 1, "outcome": 0 },
+      { "month": "2026-07", "executed": 1, "outcome": 0 }
+    ]
+  },
+  {
+    "id": "P4", "kind": "REPORT", "name": "주간 선복 현황 보고서", "dept": "영업지원팀", "stage": null,
+    "introducedAt": "2018-06-01", "minutesPerRun": 90, "lastOutcomeBefore": "2024-06",
+    "usage": [
+      { "month": "2025-11", "executed": 4, "outcome": 0 }, { "month": "2025-12", "executed": 5, "outcome": 0 },
+      { "month": "2026-01", "executed": 4, "outcome": 0 }, { "month": "2026-02", "executed": 4, "outcome": 0 },
+      { "month": "2026-03", "executed": 4, "outcome": 0 }, { "month": "2026-04", "executed": 5, "outcome": 0 },
+      { "month": "2026-05", "executed": 4, "outcome": 0 }, { "month": "2026-06", "executed": 4, "outcome": 0 },
+      { "month": "2026-07", "executed": 5, "outcome": 0 }, { "month": "2026-08", "executed": 4, "outcome": 0 },
+      { "month": "2026-09", "executed": 4, "outcome": 0 }, { "month": "2026-10", "executed": 5, "outcome": 0 }
+    ]
+  },
+  {
+    "id": "P5", "kind": "REPORT", "name": "월간 재작업 현황 보고", "dept": "운영팀", "stage": null,
+    "introducedAt": "2022-01-01", "originReason": "재작업 비용 관리", "minutesPerRun": 120,
+    "usage": [
+      { "month": "2025-11", "executed": 1, "outcome": 1 }, { "month": "2025-12", "executed": 1, "outcome": 1 },
+      { "month": "2026-01", "executed": 1, "outcome": 0 }, { "month": "2026-02", "executed": 1, "outcome": 1 },
+      { "month": "2026-03", "executed": 1, "outcome": 1 }, { "month": "2026-04", "executed": 1, "outcome": 1 },
+      { "month": "2026-05", "executed": 1, "outcome": 0 }, { "month": "2026-06", "executed": 1, "outcome": 1 },
+      { "month": "2026-07", "executed": 1, "outcome": 1 }, { "month": "2026-08", "executed": 1, "outcome": 1 },
+      { "month": "2026-09", "executed": 1, "outcome": 0 }, { "month": "2026-10", "executed": 1, "outcome": 1 }
+    ]
+  },
+  {
+    "id": "P6", "kind": "INPUT_FIELD", "name": "부킹 접수 – 화주 팩스번호", "dept": "영업팀", "stage": "BOOKING", "fieldKey": "shipperFax",
+    "introducedAt": "2012-03-01", "originReason": "팩스로 부킹을 받던 시절 확인서 회신용", "minutesPerRun": 1, "lastOutcomeBefore": "2021-08",
+    "usage": [
+      { "month": "2025-11", "executed": 25, "outcome": 0 }, { "month": "2025-12", "executed": 24, "outcome": 0 },
+      { "month": "2026-01", "executed": 26, "outcome": 0 }, { "month": "2026-02", "executed": 23, "outcome": 0 },
+      { "month": "2026-03", "executed": 25, "outcome": 0 }, { "month": "2026-04", "executed": 27, "outcome": 0 },
+      { "month": "2026-05", "executed": 24, "outcome": 0 }, { "month": "2026-06", "executed": 25, "outcome": 0 },
+      { "month": "2026-07", "executed": 26, "outcome": 0 }, { "month": "2026-08", "executed": 24, "outcome": 0 },
+      { "month": "2026-09", "executed": 25, "outcome": 0 }, { "month": "2026-10", "executed": 26, "outcome": 0 }
+    ]
+  },
+  {
+    "id": "P7", "kind": "INPUT_FIELD", "name": "서류 작성 – HS 코드", "dept": "운영팀", "stage": "DOC_PREP", "fieldKey": "hsCode",
+    "introducedAt": "2017-09-01", "originReason": "통관 서류와 품목 분류 일치", "minutesPerRun": 2,
+    "usage": [
+      { "month": "2025-11", "executed": 25, "outcome": 0 }, { "month": "2025-12", "executed": 24, "outcome": 0 },
+      { "month": "2026-01", "executed": 26, "outcome": 0 }, { "month": "2026-02", "executed": 23, "outcome": 0 },
+      { "month": "2026-03", "executed": 25, "outcome": 0 }, { "month": "2026-04", "executed": 27, "outcome": 0 },
+      { "month": "2026-05", "executed": 24, "outcome": 0 }, { "month": "2026-06", "executed": 25, "outcome": 0 },
+      { "month": "2026-07", "executed": 26, "outcome": 0 }, { "month": "2026-08", "executed": 24, "outcome": 0 },
+      { "month": "2026-09", "executed": 25, "outcome": 0 }, { "month": "2026-10", "executed": 26, "outcome": 0 }
+    ]
+  },
+  {
+    "id": "P8", "kind": "APPROVAL", "name": "특송 비용 예외 승인", "dept": "경영지원팀", "stage": null,
+    "introducedAt": "2020-07-01", "originReason": "특송 비용 과다 지출 방지", "minutesPerRun": 20, "avgWaitHours": 6,
+    "usage": [
+      { "month": "2025-12", "executed": 1, "outcome": 0 }, { "month": "2026-02", "executed": 1, "outcome": 0 },
+      { "month": "2026-05", "executed": 1, "outcome": 0 }, { "month": "2026-08", "executed": 1, "outcome": 0 },
+      { "month": "2026-10", "executed": 1, "outcome": 0 }
+    ]
+  }
+]
