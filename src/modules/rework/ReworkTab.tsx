@@ -6,6 +6,7 @@ import { caseById, patterns, traceById, traces } from "../../data";
 import { seed } from "../../seed";
 import { useApp } from "../../store";
 import { Badge, Button, Card, CardTitle, ConfirmButton, NeedsReview, Stat } from "../../components/ui";
+import { ReasonClassifier } from "./ReasonClassifier";
 
 const KIND_LABEL = { MISSING: "누락", WRONG: "오입력" } as const;
 
@@ -120,9 +121,7 @@ function CaseTimeline() {
           );
         })}
       </ol>
-      {c.reworkText && (
-        <blockquote className="mt-5 border-l-2 border-line pl-3 text-ink-2">반려 메일: “{c.reworkText}”</blockquote>
-      )}
+      {c.reworkText && <ReasonClassifier key={c.id} caseId={c.id} text={c.reworkText} existing={c.reasonCode} />}
     </Card>
   );
 }

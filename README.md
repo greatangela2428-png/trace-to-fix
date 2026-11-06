@@ -21,9 +21,11 @@
 
 ## 실행
 
+AI 기능(반려 사유 분류)을 쓰려면 `.env.example`을 `.env.local`로 복사하고 `OPENAI_API_KEY`를 채웁니다. 배포 환경에서는 Vercel 프로젝트 환경변수에 같은 이름으로 넣습니다.
+
 ```bash
 npm install
-npm run dev          # 개발 서버
+npm run dev          # 개발 서버(/api 포함)
 npm test             # 단위 테스트(Vitest)
 npm run build        # 타입 검사 + 빌드
 ```
