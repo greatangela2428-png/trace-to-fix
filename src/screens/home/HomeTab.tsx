@@ -63,6 +63,11 @@ export function HomeTab() {
 
       <MetricFormulas />
 
+      {top.length === 0 && (
+        <Card>
+          <p className="text-ink-2">아직 보고서가 없습니다. 작성 탭에서 보고서를 시작하면 여기서 우선순위대로 보여 줍니다.</p>
+        </Card>
+      )}
       <ol className="grid gap-4 lg:grid-cols-3">
         {top.map((v, i) => (
           <li key={v.report.id}>

@@ -8,6 +8,7 @@ import { useApp } from "../../store";
 import { Badge, Button, Card, CardTitle, Intro, NeedsReview, Stat } from "../../components/ui";
 import { icons } from "../../components/infographics";
 import { KotraEvidence } from "./KotraEvidence";
+import { RulesNotice } from "../../screens/common/RulesNotice";
 
 const KIND_TONE: Record<CheckKind, "danger" | "warn"> = {
   EXPIRED: "danger",
@@ -86,6 +87,9 @@ export function LogicTab() {
           <span className={`ml-auto text-sm tabular-nums ${tooLong ? "text-danger" : "text-ink-3"}`}>
             {fmt(text.length)} / {fmt(REPORT_MAX_CHARS)}자
           </span>
+        </div>
+        <div className="mt-2">
+          <RulesNotice>AI 분해(실시간)는 문장을 결론·주장·근거로 나누기만 합니다. AI가 실패해도 샘플은 미리 분해된 데이터로 점검됩니다.</RulesNotice>
         </div>
         {loading && (
           <p className="mt-2 text-sm text-ink-3" role="status">

@@ -106,6 +106,14 @@ interface AppState {
   editingEvidenceId: string | null;
   // 상단 지표를 누르면 해당 화면에서 그 목록을 펼친다
   focus: "dueThisWeek" | "weak" | null;
+  // 피로도: 확인 요청에 사람이 어떻게 응답했나(이 브라우저에 저장)
+  fatigue: Fatigue;
+  resetFatigue: () => void;
+  // 3분 데모 모드
+  demo: { active: boolean; step: number };
+  setDemo: (d: Partial<{ active: boolean; step: number }>) => void;
+  /** 보관함·보고서·응답·결정을 처음 샘플 상태로 */
+  resetWorkspace: () => void;
   setFocus: (f: "dueThisWeek" | "weak" | null) => void;
   setEditingEvidence: (id: string | null) => void;
   selectReport: (reportId: string) => void;
@@ -136,6 +144,32 @@ const tabFromHash = (): TabId => {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
   return (TAB_IDS as string[]).includes(h) ? (h as TabId) : "home";
 };
+
+// ── 피로도 집계 저장(이 브라우저에만, 실패해도 앱은 동작) ──────
+export interface Fatigue {
+  accepted: number; // [확인함]·[수정할게요]
+  ignored: number; // [문제없음]
+  since: string;
+}
+const FATIGUE_KEY = "rs-fatigue";
+const EMPTY_FATIGUE: Fatigue = { accepted: 0, ignored: 0, since: new Date().toISOString() };
+function loadFatigue(): Fatigue {
+  try {
+    const raw = localStorage.getItem(FATIGUE_KEY);
+    const v = raw ? (JSON.parse(raw) as Partial<Fatigue>) : null;
+    if (v && typeof v.accepted === "number" && typeof v.ignored === "number" && typeof v.since === "string") return v as Fatigue;
+  } catch {
+    /* 저장소를 못 쓰는 환경 */
+  }
+  return EMPTY_FATIGUE;
+}
+function saveFatigue(f: Fatigue) {
+  try {
+    localStorage.setItem(FATIGUE_KEY, JSON.stringify(f));
+  } catch {
+    /* 저장 실패는 무시 */
+  }
+}
 
 export const useApp = create<AppState>()((set, get) => ({
   tab: tabFromHash(), // #write 처럼 주소로 탭을 바로 열 수 있다
@@ -279,7 +313,18 @@ export const useApp = create<AppState>()((set, get) => ({
   selectReport: (reportId) => set((st) => ({ selected: { reportId, claimId: firstClaimId(st.ws.reports.find((r) => r.id === reportId)) } })),
   selectClaim: (claimId) => set((st) => ({ selected: { ...st.selected, claimId } })),
   checkLog: {},
-  respondCheck: (itemKey, action) => set((st) => ({ checkLog: { ...st.checkLog, [itemKey]: { action, at: now() } } })),
+  respondCheck: (itemKey, action) =>
+    set((st) => {
+      // 같은 항목에 다시 응답하면 이전 응답은 빼고 센다
+      const prev = st.checkLog[itemKey]?.action;
+      const f = { ...st.fatigue };
+      if (prev === "dismiss") f.ignored--;
+      else if (prev) f.accepted--;
+      if (action === "dismiss") f.ignored++;
+      else f.accepted++;
+      saveFatigue(f);
+      return { checkLog: { ...st.checkLog, [itemKey]: { action, at: now() } }, fatigue: f };
+    }),
   undoCheck: (itemKey) =>
     set((st) => {
       const next = { ...st.checkLog };
@@ -288,6 +333,25 @@ export const useApp = create<AppState>()((set, get) => ({
     }),
   editingEvidenceId: null,
   focus: null,
+  fatigue: loadFatigue(),
+  resetFatigue: () => {
+    saveFatigue(EMPTY_FATIGUE);
+    set({ fatigue: EMPTY_FATIGUE });
+  },
+  demo: { active: false, step: 0 },
+  setDemo: (d) => set((st) => ({ demo: { ...st.demo, ...d } })),
+  resetWorkspace: () =>
+    set({
+      ws: { evidence: workspaceSeed.evidenceInputs, reports: workspaceSeed.reportInputs, approvedRequired: [], clockOffsetDays: 0, weights: DEFAULT_WEIGHTS },
+      checkLog: {},
+      docDecisions: {},
+      mergeLog: {},
+      zombieDecisions: {},
+      aiReasons: {},
+      focus: null,
+      editingEvidenceId: null,
+      selected: { reportId: workspaceSeed.reportInputs[0]?.id ?? "", claimId: firstClaimId(workspaceSeed.reportInputs[0]) },
+    }),
   setFocus: (focus) => set({ focus }),
   setEditingEvidence: (editingEvidenceId) => set({ editingEvidenceId }),
 

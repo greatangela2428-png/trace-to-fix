@@ -10,6 +10,7 @@ import { STATUS_SEVERITY, type EvaluatedClaim } from "../../rules";
 import { useApp } from "../../store";
 import { useWorkspace } from "../../workspace/useWorkspace";
 import { SampleNotice } from "../../workspace/ui";
+import { RulesNotice } from "../common/RulesNotice";
 import { CheckPanel } from "./CheckPanel";
 import { PullPanel } from "./PullPanel";
 import { SensitivityBox } from "./SensitivityBox";
@@ -160,6 +161,7 @@ export function WriteTab() {
         코드 규칙이 결정 적용 시점 기준으로 바로 점검합니다. 확인 요청은 중요한 3개만 위에 보입니다.
       </Intro>
       <SampleNotice />
+      <RulesNotice>작성 화면의 보고서는 주장·근거 연결을 미리 분해해 둔 샘플입니다. 새 보고서를 붙여넣어 AI로 나누려면 분석 도구의 논리 역추적을 쓰세요.</RulesNotice>
 
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="보고서 선택">
         {ws.reports.map((v) => (

@@ -1,11 +1,29 @@
-import { useState, type ReactNode } from "react";
+import { Suspense, lazy, useState, type ReactNode } from "react";
 import { useApp, type TabId } from "./store";
-import { ReworkTab } from "./modules/rework/ReworkTab";
-import { LogicTab } from "./modules/logic/LogicTab";
-import { WriteTab } from "./screens/write/WriteTab";
-import { VaultTab } from "./screens/vault/VaultTab";
-import { DocsTab } from "./modules/docs/DocsTab";
 import { HomeTab } from "./screens/home/HomeTab";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { FlowBar } from "./screens/common/FlowBar";
+import { FatigueWidget } from "./screens/common/FatigueWidget";
+import { LimitsDialog, RulesDialog } from "./screens/common/InfoDialogs";
+import { DemoButton, DemoGuide } from "./screens/common/DemoGuide";
+
+// 첫 화면(오늘의 보고서)만 바로 싣고, 나머지 탭은 열 때 불러온다(첫 로딩을 가볍게)
+const WriteTab = lazy(() => import("./screens/write/WriteTab").then((m) => ({ default: m.WriteTab })));
+const VaultTab = lazy(() => import("./screens/vault/VaultTab").then((m) => ({ default: m.VaultTab })));
+const DocsTab = lazy(() => import("./modules/docs/DocsTab").then((m) => ({ default: m.DocsTab })));
+const ReworkTab = lazy(() => import("./modules/rework/ReworkTab").then((m) => ({ default: m.ReworkTab })));
+const LogicTab = lazy(() => import("./modules/logic/LogicTab").then((m) => ({ default: m.LogicTab })));
+
+/** 탭을 불러오는 동안(로딩 상태) */
+function TabLoading() {
+  return (
+    <div role="status" className="space-y-3">
+      <div className="h-24 animate-pulse rounded-3xl bg-surface-2" />
+      <div className="h-64 animate-pulse rounded-3xl bg-surface-2" />
+      <span className="sr-only">화면을 불러오는 중</span>
+    </div>
+  );
+}
 import { useWorkspace } from "./workspace/useWorkspace";
 import { PortScene, icons } from "./components/infographics";
 import { ExportDialog } from "./export/ExportDialog";
@@ -104,6 +122,9 @@ export default function App() {
   const setTab = useApp((s) => s.setTab);
   const [theme, setTheme] = useState<Theme>(currentTheme);
   const [exportOpen, setExportOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [limitsOpen, setLimitsOpen] = useState(false);
+  const resetWorkspace = useApp((s) => s.resetWorkspace);
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     saveTheme(next);
@@ -126,6 +147,7 @@ export default function App() {
             <span className="size-1.5 rounded-full bg-ok" />
             개인명 비표시 · 항상 켜짐
           </span>
+          <DemoButton />
           <button
             type="button"
             onClick={() => setExportOpen(true)}
@@ -171,8 +193,9 @@ export default function App() {
             );
           })}
         </div>
-        {/* 아래 줄: 분석 도구(기존 상세 화면) */}
-        <div role="tablist" aria-label="분석 도구" className="no-scrollbar mt-2 flex items-center gap-1 overflow-x-auto px-1">
+        {/* 아래 줄: 분석 도구(기존 상세 화면) + 피로도 위젯 */}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <div role="tablist" aria-label="분석 도구" className="no-scrollbar flex items-center gap-1 overflow-x-auto px-1">
           <span className="mr-1 shrink-0 text-xs text-ink-3">분석 도구</span>
           {TOOL_TABS.map((t) => {
             const active = tab === t.id;
@@ -193,22 +216,41 @@ export default function App() {
             );
           })}
         </div>
+        <FatigueWidget />
+        </div>
       </nav>
 
       <main className="mx-auto max-w-6xl pb-16 pt-4">
-        {tab === "home" && <HomeTab />}
-        {tab === "write" && <WriteTab />}
-        {tab === "vault" && <VaultTab />}
-        {tab === "rework" && <ReworkTab />}
-        {tab === "logic" && <LogicTab />}
-        {tab === "docs" && <DocsTab />}
+        <FlowBar />
+        {/* 화면 하나에서 오류가 나도 앱 전체가 멈추지 않게(오류 상태), 탭은 필요할 때 불러온다(로딩 상태) */}
+        <ErrorBoundary resetKey={tab} onReset={resetWorkspace}>
+          <Suspense fallback={<TabLoading />}>
+            {tab === "home" && <HomeTab />}
+            {tab === "write" && <WriteTab />}
+            {tab === "vault" && <VaultTab />}
+            {tab === "rework" && <ReworkTab />}
+            {tab === "logic" && <LogicTab />}
+            {tab === "docs" && <DocsTab />}
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
-      <footer className="mx-auto max-w-6xl border-t border-line py-6 text-xs text-ink-3">
-        논리 역추적 참고 지표: 대한무역투자진흥공사(KOTRA) 권역별 경제 지표, 공공데이터포털. 모든 추정·점검 결과는 담당자 확인이 필요합니다.
+      <footer className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 border-t border-line py-6 text-xs text-ink-3">
+        <span>논리 역추적 참고 지표: 대한무역투자진흥공사(KOTRA) 권역별 경제 지표, 공공데이터포털. 모든 추정·점검 결과는 담당자 확인이 필요합니다.</span>
+        <span className="ml-auto flex gap-3">
+          <button type="button" onClick={() => setRulesOpen(true)} className="underline-offset-2 hover:text-ink hover:underline">
+            규칙 목록 보기
+          </button>
+          <button type="button" onClick={() => setLimitsOpen(true)} className="underline-offset-2 hover:text-ink hover:underline">
+            이 시스템이 하지 못하는 것
+          </button>
+        </span>
       </footer>
 
       <ExportDialog open={exportOpen} onClose={() => setExportOpen(false)} />
+      <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} />
+      <LimitsDialog open={limitsOpen} onClose={() => setLimitsOpen(false)} />
+      <DemoGuide />
     </div>
   );
 }
