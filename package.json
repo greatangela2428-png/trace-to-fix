@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:artifact": "npm run build && node scripts/build-artifact.mjs",
+    "data:kotra": "node scripts/import-kotra.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -15,6 +16,7 @@
     "openai": "^7.52.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "write-excel-file": "^4.1.1",
     "zod": "^4.6.7",
     "zustand": "^5.0.16"
   },

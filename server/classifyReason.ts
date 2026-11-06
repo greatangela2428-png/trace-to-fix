@@ -1,4 +1,5 @@
 // 반려 사유 자동 분류(사양 4.2-5, 9장). 모델 호출부는 주입받아 테스트에서 가짜로 바꿀 수 있다.
+import { callJsonWithRetry, type CallModel } from "./openai.js";
 import {
   ModelClassificationSchema,
   REASON_CODES,
@@ -38,34 +39,16 @@ export const RESPONSE_JSON_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-export type CallModel = (args: { system: string; user: string }) => Promise<string>;
+export type { CallModel };
 
-export class AiOutputError extends Error {}
-
-const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
+export const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
 
 export async function classifyReason(
   text: string,
   deps: { callModel: CallModel; model: string },
 ): Promise<ClassifyResponse> {
   const user = redact(text);
-
-  // 스키마 검증 실패 시 1회 재시도(사양 5-1과 같은 정책)
-  let parsed: ReturnType<typeof ModelClassificationSchema.safeParse> | undefined;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const raw = await deps.callModel({ system: SYSTEM_PROMPT, user });
-    let json: unknown;
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      continue;
-    }
-    parsed = ModelClassificationSchema.safeParse(json);
-    if (parsed.success) break;
-  }
-  if (!parsed?.success) throw new AiOutputError("AI 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해 주세요.");
-
-  const out = parsed.data;
+  const out = await callJsonWithRetry(deps.callModel, { system: SYSTEM_PROMPT, user }, ModelClassificationSchema);
   const evidenceVerified = out.evidence.length > 0 && normalize(user).includes(normalize(out.evidence));
   const lowConfidence = out.confidence < CONFIDENCE_THRESHOLD;
   const needsHuman = lowConfidence || !evidenceVerified || out.code === "OTHER";

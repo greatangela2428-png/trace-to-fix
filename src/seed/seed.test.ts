@@ -49,10 +49,12 @@ describe("시나리오 2: A 선사 전환 보고서 재료", () => {
     const values = evidence.flatMap((e) => (e.figures?.["A 선사 40ft 운임(USD)"] !== undefined ? [e.figures["A 선사 40ft 운임(USD)"]] : []));
     expect(new Set(values).size).toBeGreaterThan(1);
   });
-  it("출처 없는 근거, 본문에 없는 비교 대상이 있다", () => {
+  it("출처 없는 근거, 주장에서 비교하지 않은 대상이 있다", () => {
     expect(evidence.some((e) => !e.source)).toBe(true);
-    const targets = claims.flatMap((c) => c.compareTargets);
-    expect(targets.some((t) => !seed.report.text.includes(t))).toBe(true);
+    expect(claims.some((c) => c.compareTargets.some((t) => !c.text.includes(t)))).toBe(true);
+  });
+  it("미리 분해된 주장 문장은 본문에 그대로 있다(AI 분해 결과와 비교 가능)", () => {
+    for (const c of claims) expect(seed.report.text).toContain(c.text);
   });
 });
 

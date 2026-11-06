@@ -1,13 +1,13 @@
 // 화면 상태(Zustand). 규칙·절차 변경은 사람이 '승인'해야만 상태가 바뀐다.
 import { create } from "zustand";
-import type { ReasonCode, Suggestion } from "./domain/schemas";
+import type { ReasonCode, Report, Suggestion } from "./domain/schemas";
 import type { ClassifyResponse } from "./domain/ai";
-import { classifyReasonApi } from "./api";
+import { classifyReasonApi, decomposeReportApi } from "./api";
 import { simulate, type SimResult } from "./domain/patterns";
 import { initialSuggestions, patterns, traces } from "./data";
 import { seed } from "./seed";
 
-export type TabId = "rework" | "logic" | "docs" | "zombie";
+export type TabId = "rework" | "logic" | "docs" | "zombie" | "precheck";
 export type ZombieDecision = "PAUSE_APPROVED" | "KEEP";
 
 interface AppState {
@@ -32,9 +32,18 @@ interface AppState {
   confirmReason: (caseId: string, code: ReasonCode) => void;
   resetReason: (caseId: string) => void;
 
+  // 논리 역추적: 샘플(미리 분해된 시드) 또는 AI가 분해한 보고서를 점검한다
+  logic: LogicState;
+  analyzeReport: (text: string) => Promise<void>;
+  loadSampleReport: () => void;
+
   zombieDecisions: Record<string, { decision: ZombieDecision; at: string }>;
   decideZombie: (procedureId: string, decision: ZombieDecision) => void;
   undoZombie: (procedureId: string) => void;
+
+  // 수출 사전 점검: 마지막 조회 조건(보고서 내보내기에 포함)
+  precheckQuery: { hs: string; country: string };
+  setPrecheckQuery: (q: Partial<{ hs: string; country: string }>) => void;
 }
 
 export type AiReasonState =
@@ -42,9 +51,20 @@ export type AiReasonState =
   | { status: "error"; message: string }
   | { status: "done"; result: ClassifyResponse; confirmed?: { code: ReasonCode; by: "AI_ACCEPTED" | "HUMAN_EDITED"; at: string } };
 
+export interface LogicState {
+  source: "sample" | "ai";
+  report: Report;
+  unverifiedClaimIds: string[];
+  model?: string;
+  status: "idle" | "loading" | "error";
+  message?: string;
+}
+
+const SAMPLE_LOGIC: LogicState = { source: "sample", report: seed.report, unverifiedClaimIds: [], status: "idle" };
+
 const now = () => new Date().toISOString();
 
-const TAB_IDS: TabId[] = ["rework", "logic", "docs", "zombie"];
+const TAB_IDS: TabId[] = ["rework", "logic", "docs", "zombie", "precheck"];
 const tabFromHash = (): TabId => {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
   return (TAB_IDS as string[]).includes(h) ? (h as TabId) : "rework";
@@ -111,6 +131,23 @@ export const useApp = create<AppState>()((set, get) => ({
       delete next[caseId];
       return { aiReasons: next };
     }),
+
+  logic: SAMPLE_LOGIC,
+  analyzeReport: async (text) => {
+    if (get().logic.status === "loading") return;
+    set((st) => ({ logic: { ...st.logic, status: "loading", message: undefined } }));
+    try {
+      const r = await decomposeReportApi(text);
+      set({ logic: { source: "ai", report: r.report, unverifiedClaimIds: r.unverifiedClaimIds, model: r.model, status: "idle" } });
+    } catch (e) {
+      // 실패해도 직전 결과는 그대로 보여 준다
+      set((st) => ({ logic: { ...st.logic, status: "error", message: e instanceof Error ? e.message : "알 수 없는 오류" } }));
+    }
+  },
+  loadSampleReport: () => set({ logic: SAMPLE_LOGIC }),
+
+  precheckQuery: { hs: "7225.11", country: "DE" },
+  setPrecheckQuery: (q) => set((st) => ({ precheckQuery: { ...st.precheckQuery, ...q } })),
 
   zombieDecisions: {},
   decideZombie: (procedureId, decision) =>

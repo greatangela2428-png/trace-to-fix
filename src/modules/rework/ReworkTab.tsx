@@ -1,11 +1,12 @@
 // ① 재작업 역추적: 사건 목록 → 타임라인 → 패턴 집계 → 개선안 + 가상 재실행
-import { STAGE_LABEL, type Suggestion } from "../../domain/schemas";
+import { STAGE_LABEL, type Stage, type Suggestion } from "../../domain/schemas";
 import { fieldLabel, formatKRW } from "../../domain/labels";
 import type { SimResult } from "../../domain/patterns";
 import { caseById, patterns, traceById, traces } from "../../data";
 import { seed } from "../../seed";
 import { useApp } from "../../store";
-import { Badge, Button, Card, CardTitle, ConfirmButton, NeedsReview, Stat } from "../../components/ui";
+import { Badge, Button, Card, CardTitle, ConfirmButton, Intro, NeedsReview, Stat } from "../../components/ui";
+import { icons } from "../../components/infographics";
 import { ReasonClassifier } from "./ReasonClassifier";
 
 const KIND_LABEL = { MISSING: "누락", WRONG: "오입력" } as const;
@@ -15,12 +16,27 @@ export function ReworkTab() {
   const suggestions = useApp((s) => s.suggestions);
   const approved = Object.values(suggestions).filter((s) => s.status === "APPROVED").length;
   const top = patterns[0];
+  const stageCounts = traces.reduce<Partial<Record<Stage, number>>>((acc, t) => {
+    acc[t.originStage] = (acc[t.originStage] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topStage = (Object.entries(stageCounts) as [Stage, number][]).sort((a, b) => b[1] - a[1])[0];
 
   return (
     <div className="space-y-6">
+      <Intro icon={icons.route("size-5")} title="재작업 역추적">
+        반려된 서류의 필드 이력을 <b className="font-semibold text-ink">B/L 초안 → SI → 서류 작성 → 부킹</b> 순으로 거꾸로 따라가,
+        틀린 값이 처음 들어온 단계를 찾습니다. 같은 원인이 반복되면 그 입구에 필수 항목·대조 규칙을 제안하고,{" "}
+        <b className="font-semibold text-ink">가상 재실행</b>으로 과거 사건 중 몇 건을 막을 수 있었는지 보여 줍니다.
+      </Intro>
+      {/* 건수·누적 비용은 맨 위 요약에 있으므로 여기서는 다른 관점의 숫자를 보여 준다 */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="재작업·반려 건수" value={`${traces.length}건`} />
-        <Stat label="누적 수정비용" value={formatKRW(totalCost)} />
+        <Stat label="건당 평균 수정비용" value={formatKRW(Math.round(totalCost / Math.max(1, traces.length)))} />
+        <Stat
+          label="가장 많은 최초 원인 단계"
+          value={topStage ? STAGE_LABEL[topStage[0]].replace(/\(.*\)/, "") : "-"}
+          sub={topStage ? `${traces.length}건 중 ${topStage[1]}건` : undefined}
+        />
         <Stat
           label="비용 1위 패턴"
           value={top ? `${fieldLabel(top.field)} ${KIND_LABEL[top.kind]}` : "-"}

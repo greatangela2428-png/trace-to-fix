@@ -10,7 +10,8 @@ import {
 } from "../../domain/zombie";
 import { procedureById, zombieFindings } from "../../data";
 import { useApp } from "../../store";
-import { Badge, Button, Card, ConfirmButton, NeedsReview, Stat } from "../../components/ui";
+import { Badge, Button, Card, ConfirmButton, Intro, NeedsReview, Stat } from "../../components/ui";
+import { icons } from "../../components/infographics";
 
 const STATUS_TONE: Record<ZombieStatus, "danger" | "warn" | "ok" | "neutral"> = {
   CANDIDATE: "danger",
@@ -30,15 +31,13 @@ export function ZombieTab() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <p className="leading-relaxed text-ink-2">
-          업무를 더하는 대신 <b className="font-semibold text-ink">빼는</b> 모듈입니다. 승인·보고·입력 항목마다 왜 생겼는지,
-          결과가 마지막으로 쓰인 때가 언제인지 추적해{" "}
-          <b className="font-semibold text-ink">12개월 동안 결과가 한 번도 쓰이지 않은 절차</b>를 폐지 후보로 제안합니다.
-          법정 절차, 재작업 원인 필드, 실행이 드문 통제는 후보에서 뺍니다. 폐지 대신{" "}
-          <b className="font-semibold text-ink">3개월 시범 중단</b> 후 재평가하도록 제안해 되돌릴 수 있게 합니다.
-        </p>
-      </Card>
+      <Intro icon={icons.hourglass("size-5")} title="업무 관성 탐지">
+        업무를 더하는 대신 <b className="font-semibold text-ink">빼는</b> 모듈입니다. 승인·보고·입력 항목마다 왜 생겼는지,
+        결과가 마지막으로 쓰인 때가 언제인지 추적해{" "}
+        <b className="font-semibold text-ink">12개월 동안 결과가 한 번도 쓰이지 않은 절차</b>를 폐지 후보로 제안합니다.
+        법정 절차, 재작업 원인 필드, 실행이 드문 통제는 후보에서 뺍니다. 폐지 대신{" "}
+        <b className="font-semibold text-ink">3개월 시범 중단</b> 후 재평가하도록 제안해 되돌릴 수 있게 합니다.
+      </Intro>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="추적 중인 절차" value={`${zombieFindings.length}개`} />

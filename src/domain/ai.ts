@@ -1,7 +1,7 @@
 // 서버(AI 호출)와 브라우저(화면)가 함께 쓰는 AI 응답 스키마. API 키와는 무관하다.
 import { z } from "zod";
 // 서버 함수(Node ESM)에서도 불리므로 확장자를 붙여 import한다.
-import { REASON_CODES, ReasonCodeSchema, type ReasonCode } from "./schemas.js";
+import { REASON_CODES, ReasonCodeSchema, ReportSchema, type ReasonCode } from "./schemas.js";
 
 export const REASON_LABEL: Record<ReasonCode, string> = {
   MISSING_INFO: "정보 누락",
@@ -41,3 +41,23 @@ export const ClassifyResponseSchema = z.object({
 export type ClassifyResponse = z.infer<typeof ClassifyResponseSchema>;
 
 export { REASON_CODES };
+
+// ── 모듈 2: 보고서 분해(결론 → 주장 → 근거 → 가정) ─────────
+export const REPORT_MAX_CHARS = 6000;
+
+export const DecomposeRequestSchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(20, "보고서 내용이 너무 짧습니다. 결론과 근거가 들어간 본문을 붙여넣어 주세요.")
+    .max(REPORT_MAX_CHARS, `보고서는 ${REPORT_MAX_CHARS.toLocaleString("ko-KR")}자까지 보낼 수 있습니다.`),
+});
+
+/** 서버가 화면에 돌려주는 분해 결과. report는 규칙 점검에 그대로 넣을 수 있는 형태다. */
+export const DecomposeResponseSchema = z.object({
+  report: ReportSchema,
+  /** 주장 문장이 원문에서 확인되지 않은 주장 id(AI가 바꿔 말했거나 지어냈을 수 있음) */
+  unverifiedClaimIds: z.array(z.string()),
+  model: z.string(),
+});
+export type DecomposeResponse = z.infer<typeof DecomposeResponseSchema>;
