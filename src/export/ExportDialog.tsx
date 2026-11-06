@@ -25,7 +25,7 @@ export function ExportDialog({ open, onClose }: { open: boolean; onClose: () => 
   const toggle = (id: SectionId) => setSections((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const build = async () => {
-    const input = await collectReportInput(sections.includes("precheck"));
+    const input = await collectReportInput();
     return buildReport(input, { months, sections });
   };
 

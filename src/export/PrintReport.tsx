@@ -47,9 +47,9 @@ export function PrintReport({ doc, onDone }: { doc: ReportDoc; onDone: () => voi
   return createPortal(
     <div className="print-root">
       <section className="pr-cover">
-        <div className="pr-brand">TRACE-TO-FIX · 업무 역추적 시스템</div>
+        <div className="pr-brand">REPORT SUPPORTER · 보고서 도우미</div>
         <h1>{doc.title}</h1>
-        <p className="pr-sub">오류를 고치는 대신, 오류가 생기는 입구를 고칩니다.</p>
+        <p className="pr-sub">근거는 한 번 저장하고, 필요한 만큼만 끌어옵니다.</p>
         <PortScene palette={PRINT_PALETTE} className="pr-scene" />
         <dl className="pr-meta">
           <div>

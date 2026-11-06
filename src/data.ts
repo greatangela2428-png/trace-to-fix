@@ -23,3 +23,8 @@ export const zombieFindings = sortFindings(
   findZombies(seed.procedures, { asOf: AS_OF, reworkFieldCounts }),
 );
 export const procedureById = new Map(seed.procedures.map((p) => [p.id, p]));
+
+// 재작업 역추적(보고서 단위): 반려된 보고서의 재작업 항목이 처음 틀린 단계
+import { aggregateRPatterns, traceReportCase, type RTrace } from "./domain/reportRework";
+export const rTraces: RTrace[] = seed.reportRework.map(traceReportCase).filter((t): t is RTrace => t !== null);
+export const rPatterns = aggregateRPatterns(rTraces, seed.reportRework);

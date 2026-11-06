@@ -1,0 +1,216 @@
+[
+  {
+    "id": "E-RATE-A-Q3",
+    "type": "rate_table",
+    "title": "A 선사 운임표(2026년 3분기)",
+    "source": "영업팀 공유폴더/운임표/A선사_2026Q3.xlsx",
+    "capturedAt": "2026-07-01",
+    "validFrom": "2026-07-01",
+    "validTo": "2026-09-30",
+    "scope": ["부산-로테르담"],
+    "fields": [{ "key": "A 선사 40ft 운임", "value": 1850, "unit": "USD/FEU" }]
+  },
+  {
+    "id": "E-MAIL-A",
+    "type": "quote_mail",
+    "title": "A 선사 견적 회신 메일",
+    "source": "메일 2026-10-14 · A 선사 영업부",
+    "capturedAt": "2026-10-14",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "A 선사 40ft 운임", "value": 1920, "unit": "USD/FEU" },
+      { "key": "포함 항목", "value": "해상운임" }
+    ]
+  },
+  {
+    "id": "E-CONTRACT-CUR",
+    "type": "contract",
+    "title": "현 선사 계약 운임표",
+    "source": "계약관리 시스템 CT-2026-017",
+    "capturedAt": "2026-01-02",
+    "validFrom": "2026-01-01",
+    "validTo": "2026-12-31",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "현 선사 40ft 운임", "value": 2100, "unit": "USD/FEU" },
+      { "key": "포함 항목", "value": "해상운임" }
+    ]
+  },
+  {
+    "id": "E-SHIP-2026",
+    "type": "past_report",
+    "title": "2026년 유럽 항로 선적 실적",
+    "source": "운영 시스템 선적 실적 리포트",
+    "capturedAt": "2026-10-31",
+    "scope": ["유럽 항로"],
+    "fields": [{ "key": "연간 물동량", "value": 356, "unit": "FEU" }]
+  },
+  {
+    "id": "E-PROMO-A",
+    "type": "reference",
+    "title": "A 선사 홍보 자료",
+    "source": "",
+    "capturedAt": "2026-09-20",
+    "scope": ["유럽 항로"],
+    "fields": [{ "key": "정시 도착률", "value": 92, "unit": "%" }]
+  },
+  {
+    "id": "E-D1",
+    "type": "rate_table",
+    "title": "11월 유럽 운임 견적서",
+    "source": "영업팀 · A 선사 2026-11 운임표 기준",
+    "capturedAt": "2026-10-18",
+    "validTo": "2026-11-30",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "거래처", "value": "한빛전자" },
+      { "key": "기준자료", "value": "A 선사 2026-11 운임표" },
+      { "key": "해상운임", "value": 1850, "unit": "USD/FEU" },
+      { "key": "BAF", "value": 215, "unit": "USD/FEU" },
+      { "key": "THC", "value": 185000, "unit": "KRW" },
+      { "key": "포함 항목", "value": "해상운임·BAF·THC 별도" }
+    ],
+    "history": [
+      { "at": "2026-10-18T10:00:00+09:00", "event": "문서 생성" },
+      { "at": "2026-10-27T15:00:00+09:00", "event": "BAF 215로 갱신(선사 11월 공지 반영)" }
+    ]
+  },
+  {
+    "id": "E-D2",
+    "type": "rate_table",
+    "title": "로테르담 항로 단가표 v2",
+    "source": "운영팀 · A 선사 2026-11 운임표 기준",
+    "capturedAt": "2026-10-20",
+    "validTo": "2026-11-30",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "거래처", "value": "한빛전자" },
+      { "key": "기준자료", "value": "A 선사 2026-11 운임표" },
+      { "key": "해상운임", "value": 1850, "unit": "USD/FEU" },
+      { "key": "BAF", "value": 198, "unit": "USD/FEU" },
+      { "key": "THC", "value": 185000, "unit": "KRW" },
+      { "key": "포함 항목", "value": "해상운임·BAF·THC 별도" }
+    ],
+    "history": [
+      { "at": "2026-10-20T11:00:00+09:00", "event": "'11월 유럽 운임 견적서'에서 복사", "fromId": "E-D1" },
+      { "at": "2026-10-20T11:05:00+09:00", "event": "제목 변경: 로테르담 항로 단가표 v2" },
+      { "at": "2026-10-23T09:30:00+09:00", "event": "BAF 198로 수정" }
+    ]
+  },
+  {
+    "id": "E-D3",
+    "type": "rate_table",
+    "title": "B 선사 유럽 견적서(경쟁 비교용)",
+    "source": "영업팀 · B 선사 2026-11 운임표 기준",
+    "capturedAt": "2026-10-21",
+    "validTo": "2026-11-30",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "거래처", "value": "한빛전자" },
+      { "key": "기준자료", "value": "B 선사 2026-11 운임표" },
+      { "key": "해상운임", "value": 1880, "unit": "USD/FEU" },
+      { "key": "BAF", "value": 210, "unit": "USD/FEU" },
+      { "key": "THC", "value": 185000, "unit": "KRW" },
+      { "key": "포함 항목", "value": "해상운임·BAF·THC 별도" }
+    ],
+    "history": [{ "at": "2026-10-21T14:00:00+09:00", "event": "문서 생성" }]
+  },
+  {
+    "id": "E-D4",
+    "type": "reference",
+    "title": "동남아 항로 THC 인상 안내",
+    "source": "운영팀 · 터미널 운영사 공지 2026-10",
+    "capturedAt": "2026-10-25",
+    "validFrom": "2026-12-01",
+    "scope": ["부산-호찌민", "부산-방콕"],
+    "fields": [
+      { "key": "기준자료", "value": "터미널 운영사 공지 2026-10" },
+      { "key": "THC", "value": 195000, "unit": "KRW" }
+    ],
+    "history": [{ "at": "2026-10-25T09:00:00+09:00", "event": "문서 생성" }]
+  },
+  {
+    "id": "E-D5",
+    "type": "rate_table",
+    "title": "유럽 견적 참고자료",
+    "source": "영업팀 · A 선사 11월 운임표 기준",
+    "capturedAt": "2026-10-22",
+    "validTo": "2026-11-30",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "거래처", "value": "한빛전자" },
+      { "key": "기준자료", "value": "A 선사 2026-11 운임표" },
+      { "key": "해상운임", "value": 1850, "unit": "USD/FEU" },
+      { "key": "BAF", "value": 215, "unit": "USD/FEU" },
+      { "key": "THC", "value": 185000, "unit": "KRW" },
+      { "key": "포함 항목", "value": "해상운임·BAF·THC 별도" }
+    ]
+  },
+  {
+    "id": "E-HANBIT-NOV",
+    "type": "past_report",
+    "title": "한빛전자 11월 선적 실적",
+    "source": "운영 시스템 선적 실적 리포트",
+    "capturedAt": "2026-11-04",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "거래처", "value": "한빛전자" },
+      { "key": "11월 선적량", "value": 48, "unit": "FEU" }
+    ]
+  },
+  {
+    "id": "E-SPACE-W45",
+    "type": "past_report",
+    "title": "11월 1주 선복 배정 현황",
+    "source": "운영 시스템 선복 배정 리포트",
+    "capturedAt": "2026-11-03",
+    "validTo": "2026-11-09",
+    "scope": ["유럽 항로"],
+    "fields": [
+      { "key": "배정 선복", "value": 40, "unit": "FEU" },
+      { "key": "사용 선복", "value": 35, "unit": "FEU" }
+    ]
+  },
+  {
+    "id": "E-KOTRA-GOES-DE",
+    "type": "regulation",
+    "title": "독일 전기강판 반덤핑(규제중)",
+    "source": "KOTRA 국별 대세계 수입규제 현황(공공데이터포털)",
+    "capturedAt": "2026-11-06",
+    "validFrom": "2022-01-18",
+    "validTo": "2027-01-18",
+    "scope": ["독일"],
+    "fields": [
+      { "key": "HS 코드", "value": "7225110011" },
+      { "key": "한국 대상 세율", "value": 22.5, "unit": "%" }
+    ]
+  },
+  {
+    "id": "E-BK-261105",
+    "type": "booking_record",
+    "title": "BK-261105 부킹 접수 기록 · 부산→함부르크",
+    "source": "부킹 시스템",
+    "capturedAt": "2026-11-05",
+    "scope": ["부산-함부르크"],
+    "fields": [
+      { "key": "consigneeAddress", "value": "" },
+      { "key": "hsCode", "value": "8471.30" },
+      { "key": "portOfDischarge", "value": "DEHAM" },
+      { "key": "grossWeight", "value": 18400, "unit": "kg" }
+    ]
+  },
+  {
+    "id": "E-BK-261106",
+    "type": "booking_record",
+    "title": "BK-261106 부킹 접수 기록 · 부산→로테르담",
+    "source": "부킹 시스템",
+    "capturedAt": "2026-11-05",
+    "scope": ["부산-로테르담"],
+    "fields": [
+      { "key": "consigneeAddress", "value": "Wilhelminakade 909, 3072 AP Rotterdam, NL" },
+      { "key": "hsCode", "value": "" },
+      { "key": "portOfDischarge", "value": "NLRTM" },
+      { "key": "grossWeight", "value": 21200, "unit": "kg" }
+    ]
+  }
+]

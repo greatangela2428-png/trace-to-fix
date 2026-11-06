@@ -1,89 +1,115 @@
-// ① 재작업 역추적: 사건 목록 → 타임라인 → 패턴 집계 → 개선안 + 가상 재실행
-import { STAGE_LABEL, type Stage, type Suggestion } from "../../domain/schemas";
-import { fieldLabel, formatKRW } from "../../domain/labels";
-import type { SimResult } from "../../domain/patterns";
-import { caseById, patterns, traceById, traces } from "../../data";
-import { seed } from "../../seed";
-import { useApp } from "../../store";
+// 재작업 역추적(보고서 단위): 반려된 보고서에서 재작업이 필요했던 부분이
+// 근거 저장 → 근거 끌어오기 → 본문 작성 → 제출본 중 어디서 처음 틀렸는지 거꾸로 찾고, 그 입구를 고치는 안을 승인받는다.
+import { useState } from "react";
 import { Badge, Button, Card, CardTitle, ConfirmButton, Intro, NeedsReview, Stat } from "../../components/ui";
 import { icons } from "../../components/infographics";
+import { REASON_LABEL } from "../../domain/ai";
+import { formatKRW } from "../../domain/labels";
+import { HOURLY_COST_KRW, ITEM_RULE, R_STAGES, R_STAGE_LABEL, simulateRequired, type RPattern, type RStage } from "../../domain/reportRework";
+import { REPORT_TYPE_LABEL } from "../../domain/workspace";
+import { rPatterns, rTraces } from "../../data";
+import { seed } from "../../seed";
+import { useApp } from "../../store";
+import { useWorkspace } from "../../workspace/useWorkspace";
+import { SampleNotice } from "../../workspace/ui";
 import { ReasonClassifier } from "./ReasonClassifier";
 
-const KIND_LABEL = { MISSING: "누락", WRONG: "오입력" } as const;
+const KIND_LABEL = { MISSING: "누락", WRONG: "틀린 값" } as const;
+const caseById = new Map(seed.reportRework.map((c) => [c.id, c]));
+const traceById = new Map(rTraces.map((t) => [t.caseId, t]));
+const totalCost = rTraces.reduce((s, t) => s + t.cost, 0);
+const totalHours = seed.reportRework.reduce((s, c) => s + c.hours, 0);
+const byStage = (s: RStage) => rTraces.filter((t) => t.origin === s);
 
 export function ReworkTab() {
-  const totalCost = seed.cases.reduce((s, c) => s + c.cost, 0);
-  const suggestions = useApp((s) => s.suggestions);
-  const approved = Object.values(suggestions).filter((s) => s.status === "APPROVED").length;
-  const top = patterns[0];
-  const stageCounts = traces.reduce<Partial<Record<Stage, number>>>((acc, t) => {
-    acc[t.originStage] = (acc[t.originStage] ?? 0) + 1;
-    return acc;
-  }, {});
-  const topStage = (Object.entries(stageCounts) as [Stage, number][]).sort((a, b) => b[1] - a[1])[0];
+  const [selected, setSelected] = useState(rTraces[0]?.caseId ?? "");
+  const top = [...R_STAGES].sort((a, b) => byStage(b).length - byStage(a).length)[0]!;
 
   return (
     <div className="space-y-6">
-      <Intro icon={icons.route("size-5")} title="재작업 역추적">
-        반려된 서류의 필드 이력을 <b className="font-semibold text-ink">B/L 초안 → SI → 서류 작성 → 부킹</b> 순으로 거꾸로 따라가,
-        틀린 값이 처음 들어온 단계를 찾습니다. 같은 원인이 반복되면 그 입구에 필수 항목·대조 규칙을 제안하고,{" "}
-        <b className="font-semibold text-ink">가상 재실행</b>으로 과거 사건 중 몇 건을 막을 수 있었는지 보여 줍니다.
+      <Intro icon={icons.route("size-5")} title="재작업 역추적 · 보고서">
+        반려된 보고서에서 다시 써야 했던 부분이 <b className="font-semibold text-ink">근거 저장 → 근거 끌어오기 → 본문 작성 → 제출본</b> 중 어디서 처음 틀렸는지
+        거꾸로 찾습니다. 같은 입구에서 반복되면 그 입구(저장 필수 항목·끌어오기 경고·작성 중 점검)를 고치는 안을 내고, 사람이 승인하면 보관함 저장 화면에 반영됩니다.
       </Intro>
-      {/* 건수·누적 비용은 맨 위 요약에 있으므로 여기서는 다른 관점의 숫자를 보여 준다 */}
+      <SampleNotice>
+        반려 보고서 {rTraces.length}건 표본이라 경향을 단정할 수 없습니다. 재작업 비용 = 재작업 시간 × 시간당 {HOURLY_COST_KRW.toLocaleString("ko-KR")}원(가정).
+      </SampleNotice>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="건당 평균 수정비용" value={formatKRW(Math.round(totalCost / Math.max(1, traces.length)))} />
-        <Stat
-          label="가장 많은 최초 원인 단계"
-          value={topStage ? STAGE_LABEL[topStage[0]].replace(/\(.*\)/, "") : "-"}
-          sub={topStage ? `${traces.length}건 중 ${topStage[1]}건` : undefined}
-        />
-        <Stat
-          label="비용 1위 패턴"
-          value={top ? `${fieldLabel(top.field)} ${KIND_LABEL[top.kind]}` : "-"}
-          sub={top ? `${STAGE_LABEL[top.stage]} · ${top.count}건` : undefined}
-        />
-        <Stat label="승인된 개선 규칙" value={`${approved}개`} />
+        <Stat label="반려된 보고서" value={`${rTraces.length}건`} />
+        <Stat label="재작업 시간" value={`${totalHours}시간`} sub={formatKRW(totalCost)} />
+        <Stat label="가장 많은 최초 원인" value={R_STAGE_LABEL[top]} sub={`${rTraces.length}건 중 ${byStage(top).length}건`} />
+        <Stat label="기록상 사유가 비어 있던 반려" value={`${seed.reportRework.filter((c) => !c.recordedReason).length}건`} sub="AI 사유 분류로 채울 수 있음" />
       </div>
 
+      <StageFlow />
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <CaseList />
-        <CaseTimeline />
+        <CaseList selected={selected} onSelect={setSelected} />
+        <CaseDetail id={selected} />
       </div>
 
       <PatternTable />
-      <SuggestionPanel />
+      <Improvements />
     </div>
   );
 }
 
-function CaseList() {
-  const selected = useApp((s) => s.selectedCaseId);
-  const select = useApp((s) => s.selectCase);
+/** 단계별 최초 원인 건수(인포그래픽) */
+function StageFlow() {
+  const max = Math.max(...R_STAGES.map((s) => byStage(s).length), 1);
   return (
     <Card>
-      <CardTitle aside={<span className="text-sm text-ink-3">{traces.length}건</span>}>사건 목록</CardTitle>
-      <ul className="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
-        {traces.map((t) => {
+      <CardTitle aside={<NeedsReview />}>어디서 처음 틀렸나</CardTitle>
+      <ol className="grid gap-2 sm:grid-cols-4">
+        {R_STAGES.map((s, i) => {
+          const n = byStage(s).length;
+          return (
+            <li key={s} className="relative rounded-2xl border border-line p-4">
+              <div className="text-xs text-ink-3">
+                {i + 1}단계{i < R_STAGES.length - 1 && <span className="ml-1 hidden sm:inline">→</span>}
+              </div>
+              <div className="font-semibold text-ink">{R_STAGE_LABEL[s]}</div>
+              <div className="mt-2 text-2xl font-bold tabular-nums text-ink">{n}건</div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div className={`h-full rounded-full ${n ? "bg-danger" : ""}`} style={{ width: `${(n / max) * 100}%` }} />
+              </div>
+              <div className="mt-1 text-xs text-ink-3">{formatKRW(byStage(s).reduce((x, t) => x + t.cost, 0))}</div>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-3 text-xs text-ink-3">
+        최초 원인(추정) 판정 규칙: 제출본부터 거꾸로 따라가, 틀린 값이 끊기지 않고 이어진 가장 이른 단계를 원인으로 봅니다. 중간에 맞았다가 다시 틀어지면 다시 틀어진 단계가 원인입니다.
+      </p>
+    </Card>
+  );
+}
+
+function CaseList({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+  return (
+    <Card>
+      <CardTitle aside={<span className="text-sm text-ink-3">{rTraces.length}건</span>}>반려된 보고서</CardTitle>
+      <ul className="max-h-[30rem] space-y-2 overflow-y-auto pr-1">
+        {rTraces.map((t) => {
           const c = caseById.get(t.caseId)!;
           const active = t.caseId === selected;
           return (
             <li key={t.caseId}>
               <button
                 type="button"
-                onClick={() => select(t.caseId)}
+                onClick={() => onSelect(t.caseId)}
                 aria-pressed={active}
-                className={`w-full rounded-xl border px-3.5 py-2.5 text-left transition ${
-                  active ? "border-accent/50 bg-info-soft" : "border-transparent hover:bg-surface-2"
-                }`}
+                className={`w-full rounded-2xl border px-3.5 py-2.5 text-left transition ${active ? "border-accent/50 bg-info-soft" : "border-transparent hover:bg-surface-2"}`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-ink">{c.label}</span>
-                  <span className="shrink-0 text-sm tabular-nums text-ink-3">{formatKRW(c.cost)}</span>
+                  <span className="truncate text-ink">{c.report}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-ink-3">{c.returnedAt.slice(5)}</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  <Badge>{fieldLabel(t.field)}</Badge>
+                  <Badge>{t.item}</Badge>
                   <Badge tone={t.kind === "MISSING" ? "danger" : "warn"}>{KIND_LABEL[t.kind]}</Badge>
-                  <Badge>원인: {STAGE_LABEL[t.originStage]}</Badge>
+                  <Badge>원인: {R_STAGE_LABEL[t.origin]}</Badge>
                 </div>
               </button>
             </li>
@@ -94,107 +120,115 @@ function CaseList() {
   );
 }
 
-function CaseTimeline() {
-  const id = useApp((s) => s.selectedCaseId);
-  const t = id ? traceById.get(id) : undefined;
-  const c = id ? caseById.get(id) : undefined;
+function CaseDetail({ id }: { id: string }) {
+  const t = traceById.get(id);
+  const c = caseById.get(id);
   if (!t || !c)
     return (
       <Card>
-        <p className="text-ink-3">사건을 선택하세요.</p>
+        <p className="text-ink-3">반려된 보고서를 고르세요.</p>
       </Card>
     );
-
   return (
     <Card>
-      <CardTitle aside={<NeedsReview />}>단계별 타임라인 · {c.label}</CardTitle>
-      <p className="mb-5 text-ink-2">
-        <b className="font-semibold text-ink">{fieldLabel(t.field)}</b> 정답 값{" "}
-        <code className="break-all rounded-md bg-surface-2 px-1.5 py-0.5 text-sm text-ink">{c.correctValue}</code>
+      <CardTitle aside={<NeedsReview />}>{c.report}</CardTitle>
+      <div className="-mt-2 mb-4 flex flex-wrap gap-x-3 text-sm text-ink-3">
+        <span>{REPORT_TYPE_LABEL[c.reportType]}</span>
+        <span>반려: {c.reviewer} · {c.returnedAt}</span>
+        <span>
+          재작업 {c.hours}시간 · {formatKRW(t.cost)}
+        </span>
+      </div>
+      <p className="mb-4 text-ink-2">
+        재작업 항목 <b className="font-semibold text-ink">{c.item}</b> · 맞는 값 <code className="rounded-md bg-surface-2 px-1.5 py-0.5 text-sm text-ink">{c.correct}</code>
       </p>
       <ol className="grid gap-3 sm:grid-cols-4">
-        {t.steps.map((s, i) => {
-          const style =
-            s.status === "ORIGIN"
-              ? "border-danger/60 bg-danger-soft"
-              : s.status === "ERROR"
-                ? "border-warn/30 bg-warn-soft"
-                : "border-line bg-surface-2";
-          return (
-            <li key={s.stage} className={`rounded-xl border p-3.5 ${style}`}>
-              <div className="text-sm text-ink-3">
-                {i + 1}. {STAGE_LABEL[s.stage]}
-              </div>
-              <div className="mt-1 break-words text-ink">
-                {s.value === "" ? <span className="text-danger">(비어 있음)</span> : s.value}
-              </div>
-              <div className="mt-2.5">
-                {s.status === "ORIGIN" && <Badge tone="danger">최초 원인(추정)</Badge>}
-                {s.status === "ERROR" && <Badge tone="warn">오류 이어짐</Badge>}
-                {s.status === "OK" && <Badge tone="ok">정상</Badge>}
-              </div>
-            </li>
-          );
-        })}
+        {t.steps.map((s, i) => (
+          <li
+            key={s.stage}
+            className={`rounded-2xl border p-3.5 ${s.status === "ORIGIN" ? "border-danger/60 bg-danger-soft" : s.status === "ERROR" ? "border-warn/30 bg-warn-soft" : "border-line bg-surface-2"}`}
+          >
+            <div className="text-xs text-ink-3">
+              {i + 1}. {R_STAGE_LABEL[s.stage]}
+            </div>
+            <div className={`mt-1 break-all ${s.value ? "text-ink" : "text-danger"}`}>{s.value || "(비어 있음)"}</div>
+            {s.status === "ORIGIN" && <Badge tone="danger">최초 원인(추정)</Badge>}
+            {s.status === "ERROR" && <Badge tone="warn">오류 이어짐</Badge>}
+          </li>
+        ))}
       </ol>
-      {c.reworkText && <ReasonClassifier key={c.id} caseId={c.id} text={c.reworkText} existing={c.reasonCode} />}
+      <div className="mt-4 grid gap-2 rounded-2xl bg-surface-2/60 p-3 text-sm sm:grid-cols-2">
+        <div>
+          <div className="text-ink-3">기록상 반려 사유</div>
+          <div className="text-ink">{c.recordedReason ? REASON_LABEL[c.recordedReason] : "기록 없음"}</div>
+        </div>
+        <div>
+          <div className="text-ink-3">실제 입구(역추적)</div>
+          <div className="font-semibold text-ink">
+            {R_STAGE_LABEL[t.origin]} · {KIND_LABEL[t.kind]}
+          </div>
+        </div>
+      </div>
+      <ReasonClassifier caseId={c.id} text={c.comment} existing={c.recordedReason} />
     </Card>
   );
 }
 
 function PatternTable() {
-  const selected = useApp((s) => s.selectedPatternKey);
-  const select = useApp((s) => s.selectPattern);
-  const max = Math.max(...patterns.map((p) => p.totalCost));
+  const [byItem, setByItem] = useState(false);
+  // 항목별 합계: 단계와 무관하게 같은 항목을 합친다
+  const itemRows = [...new Set(rPatterns.map((p) => p.item))].map((item) => {
+    const ps = rPatterns.filter((p) => p.item === item);
+    return { item, n: ps.reduce((s, p) => s + p.caseIds.length, 0), hours: ps.reduce((s, p) => s + p.hours, 0), cost: ps.reduce((s, p) => s + p.cost, 0) };
+  });
   return (
     <Card>
-      <CardTitle aside={<span className="text-sm text-ink-3">원인 단계 · 필드 · 유형별, 비용순 · 행을 누르면 개선안</span>}>
-        패턴 집계
+      <CardTitle
+        aside={
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink-2">
+            <input type="checkbox" checked={byItem} onChange={(e) => setByItem(e.target.checked)} className="size-4 accent-[var(--accent)]" />
+            항목별 합계(단계 합산)
+          </label>
+        }
+      >
+        반려 패턴
       </CardTitle>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[36rem]">
-          <thead className="text-left text-sm text-ink-3">
-            <tr>
-              <th className="py-2 font-normal">원인 단계</th>
-              <th className="font-normal">필드</th>
-              <th className="font-normal">유형</th>
-              <th className="text-right font-normal">건수</th>
-              <th className="w-2/5 pl-5 font-normal">누적 비용</th>
+        <table className="w-full min-w-[34rem] text-sm">
+          <thead>
+            <tr className="text-left text-ink-3">
+              {!byItem && <th className="py-1.5 pr-3 font-normal">최초 원인 단계</th>}
+              <th className="py-1.5 pr-3 font-normal">항목</th>
+              {!byItem && <th className="py-1.5 pr-3 font-normal">유형</th>}
+              <th className="py-1.5 pr-3 text-right font-normal">건수</th>
+              <th className="py-1.5 pr-3 text-right font-normal">재작업 시간</th>
+              <th className="py-1.5 text-right font-normal">비용</th>
             </tr>
           </thead>
           <tbody>
-            {patterns.map((p, i) => {
-              const active = p.key === selected;
-              return (
-                <tr
-                  key={p.key}
-                  onClick={() => select(p.key)}
-                  className={`cursor-pointer border-t border-line ${active ? "bg-info-soft" : "hover:bg-surface-2"}`}
-                >
-                  <td className="py-2.5 pl-2">
-                    <button type="button" className="text-left text-ink" onClick={() => select(p.key)} aria-pressed={active}>
-                      {STAGE_LABEL[p.stage]}
-                    </button>
-                  </td>
-                  <td className="text-ink">{fieldLabel(p.field)}</td>
-                  <td>
-                    <Badge tone={p.kind === "MISSING" ? "danger" : "warn"}>{KIND_LABEL[p.kind]}</Badge>
-                  </td>
-                  <td className="text-right tabular-nums text-ink">{p.count}</td>
-                  <td className="pl-5 pr-2">
-                    <div className="flex items-center gap-3">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-                        <div
-                          className={`h-full rounded-full ${i === 0 ? "bg-danger" : "bg-warn/70"}`}
-                          style={{ width: `${(p.totalCost / max) * 100}%` }}
-                        />
-                      </div>
-                      <span className="w-24 text-right text-sm tabular-nums text-ink-2">{formatKRW(p.totalCost)}</span>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {byItem
+              ? itemRows.map((r) => (
+                  <tr key={r.item} className="border-t border-line">
+                    <td className="py-2 pr-3 text-ink">{r.item}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.n}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{r.hours}시간</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {formatKRW(r.cost)} <span className="text-xs text-ink-3">({Math.round((r.cost / totalCost) * 100)}%)</span>
+                    </td>
+                  </tr>
+                ))
+              : rPatterns.map((p) => (
+                  <tr key={p.key} className="border-t border-line">
+                    <td className="py-2 pr-3 text-ink-2">{R_STAGE_LABEL[p.origin]}</td>
+                    <td className="py-2 pr-3 text-ink">{p.item}</td>
+                    <td className="py-2 pr-3">
+                      <Badge tone={p.kind === "MISSING" ? "danger" : "warn"}>{KIND_LABEL[p.kind]}</Badge>
+                    </td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{p.caseIds.length}</td>
+                    <td className="py-2 pr-3 text-right tabular-nums">{p.hours}시간</td>
+                    <td className="py-2 text-right tabular-nums">{formatKRW(p.cost)}</td>
+                  </tr>
+                ))}
           </tbody>
         </table>
       </div>
@@ -202,96 +236,137 @@ function PatternTable() {
   );
 }
 
-const SUGGESTION_KIND_LABEL: Record<Suggestion["kind"], string> = {
-  REQUIRED_FIELD: "필수 항목화",
-  PRE_CHECK: "사전 점검 질문",
-  CHECKLIST: "체크리스트",
-  CROSS_CHECK: "서류 간 자동 대조",
-  NAMING_RULE: "제목 규칙",
-  SINGLE_SOURCE: "원본 하나로 연결",
-  PAUSE_PROCEDURE: "시범 중단",
-};
+/** 개선안: 저장 단계 → 저장 필수 항목(승인 시 보관함 반영) / 끌어오기·작성 단계 → 작성 중 점검 규칙과 연결 */
+function Improvements() {
+  const ws = useWorkspace();
+  const approved = useApp((s) => s.ws.approvedRequired);
+  const approve = useApp((s) => s.approveRequired);
+  const revoke = useApp((s) => s.revokeRequired);
+  const setTab = useApp((s) => s.setTab);
+  const later = rPatterns.filter((p) => p.origin !== "SAVE");
 
-function SuggestionPanel() {
-  const key = useApp((s) => s.selectedPatternKey);
-  const all = useApp((s) => s.suggestions);
-  const pattern = patterns.find((p) => p.key === key);
-  if (!pattern) return null;
-  const list = Object.values(all).filter((s) => s.patternKey === key);
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardTitle aside={<Badge tone="info">근거 저장 입구</Badge>}>저장 필수 항목 제안</CardTitle>
+        <ul className="space-y-4">
+          {ws.reportCandidates.map((c) => {
+            const sim = simulateRequired(c, rTraces);
+            const isOn = approved.includes(c.key);
+            return (
+              <li key={c.key} className={`rounded-2xl border p-4 ${isOn ? "border-ok/50" : "border-line"}`}>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-semibold text-ink">근거 저장 시 '{c.label}' 필수</span>
+                  <Badge>운임표·견적 메일·계약</Badge>
+                  {isOn ? <Badge tone="ok">승인됨 · 보관함 저장 화면에 반영</Badge> : <Badge tone="warn">승인 전 · 양식에 반영 안 됨</Badge>}
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-ok-soft p-3">
+                    <div className="text-xs text-ink-3">가상 재실행 효과</div>
+                    <div className="mt-0.5 text-lg font-bold tabular-nums text-ink">
+                      {sim.total}건 중 {sim.prevented}건 방지
+                    </div>
+                    <div className="text-xs text-ink-3">재작업 {formatKRW(sim.savedCost)} 절감(저장 단계에서 비어 있던 반려만 계산)</div>
+                  </div>
+                  <div className="rounded-xl bg-warn-soft p-3">
+                    <div className="text-xs text-ink-3">입력 부담</div>
+                    <div className="mt-0.5 text-lg font-bold tabular-nums text-ink">저장마다 +{c.burden.extraFieldsPerSave}항목</div>
+                    <div className="text-xs text-ink-3">지금 보관함에서 채워야 할 근거 {c.burden.backfill.length}건{c.burden.backfill.length ? `: ${c.burden.backfill.map((id) => ws.byId.get(id)?.title ?? id).join(", ")}` : ""}</div>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {isOn ? (
+                    <>
+                      <Button onClick={() => setTab("vault")}>보관함에서 확인</Button>
+                      <Button onClick={() => revoke(c.key)}>승인 취소</Button>
+                    </>
+                  ) : (
+                    <ConfirmButton label="승인" confirmLabel={`'${c.label}' 저장 필수로 승인`} onConfirm={() => approve(c.key)} />
+                  )}
+                </div>
+                {isOn && <Monitor field={c.field} types={c.types} label={c.label} />}
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
 
+      <Card>
+        <CardTitle aside={<Badge tone="info">끌어오기·작성 입구</Badge>}>작성 중 점검으로 막는 항목</CardTitle>
+        <ul className="space-y-2">
+          {later.map((p: RPattern) => {
+            const rule = ITEM_RULE[p.item];
+            return (
+              <li key={p.key} className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge>{R_STAGE_LABEL[p.origin]}</Badge>
+                <span className="font-medium text-ink">{p.item}</span>
+                <span className="text-ink-3">{p.caseIds.length}건</span>
+                <span className="text-ink-3">→</span>
+                {rule?.ruleId ? <Badge tone="ok">이미 동작 중: {rule.name}</Badge> : <Badge tone="warn">{rule?.name ?? "규칙 후보"}</Badge>}
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+
+      <BookingCandidates />
+    </div>
+  );
+}
+
+/** 승인 후 재발 모니터링: 지금 보관함 상태를 바로 센다(재발 반려 데이터는 아직 없음) */
+function Monitor({ field, types, label }: { field: string; types: string[]; label: string }) {
+  const ws = useWorkspace();
+  const scope = ws.evidence.filter((e) => types.includes(e.type) && !e.canonicalId);
+  const missing = scope.filter((e) => e.requiredFieldsMissing.includes(field));
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-line p-3 text-sm">
+      <div className="font-semibold text-ink-2">승인 후 모니터링</div>
+      <ul className="mt-1 space-y-0.5 text-ink-2">
+        <li>
+          대상 근거 {scope.length}건 중 '{label}' 비어 있음 {missing.length}건{missing.length ? ` (${missing.map((e) => e.title).join(", ")})` : " — 모두 채워짐"}
+        </li>
+        <li className="text-ink-3">승인 후 같은 사유의 반려 재발: 아직 기록 없음(샘플 — 실데이터 연동 시 반려 기록과 대조)</li>
+      </ul>
+    </div>
+  );
+}
+
+/** 선적 서류(부킹 기록) 필수 후보: 선적 서류 재작업 기록에서 도출(HS 코드 교차 보호와 같은 데이터) */
+function BookingCandidates() {
+  const ws = useWorkspace();
+  const approved = useApp((s) => s.ws.approvedRequired);
+  const approve = useApp((s) => s.approveRequired);
+  const revoke = useApp((s) => s.revokeRequired);
+  const [open, setOpen] = useState(false);
   return (
     <Card>
-      <CardTitle aside={<NeedsReview />}>
-        개선안 · {STAGE_LABEL[pattern.stage]} {fieldLabel(pattern.field)} {KIND_LABEL[pattern.kind]} ({pattern.count}건)
-      </CardTitle>
-      <p className="mb-5 text-ink-2">
-        사람이 승인하기 전에는 어떤 규칙도 양식에 반영되지 않습니다.
-        {pattern.kind === "WRONG" && " 오입력은 필수 항목으로 만들어도 막을 수 없어 대조·확인 방식으로 제안합니다."}
-      </p>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {list.map((s) => (
-          <SuggestionCard key={s.id} s={s} />
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-function SuggestionCard({ s }: { s: Suggestion }) {
-  const sim = useApp((st) => st.simulations[s.id]);
-  const run = useApp((st) => st.runSimulation);
-  const approve = useApp((st) => st.approve);
-  const reject = useApp((st) => st.reject);
-
-  return (
-    <div className="flex flex-col rounded-xl border border-line bg-surface-2/50 p-4">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Badge tone="info">{SUGGESTION_KIND_LABEL[s.kind]}</Badge>
-        {s.status === "APPROVED" && <Badge tone="ok">승인됨</Badge>}
-        {s.status === "REJECTED" && <Badge>반려됨</Badge>}
-      </div>
-      <p className="mt-2.5 flex-1 text-ink">{s.description}</p>
-
-      {sim && <SimView sim={sim} />}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button onClick={() => run(s.id)}>{sim ? "다시 실행" : "가상 재실행"}</Button>
-        {s.status === "PROPOSED" && (
-          <>
-            <ConfirmButton label="승인" confirmLabel="승인 확정" onConfirm={() => approve(s.id)} />
-            <Button onClick={() => reject(s.id)}>반려</Button>
-          </>
-        )}
-      </div>
-      {s.appliedAt && (
-        <p className="mt-2 text-sm text-ink-3">승인 시각 {new Date(s.appliedAt).toLocaleString("ko-KR")}</p>
-      )}
-    </div>
-  );
-}
-
-function SimView({ sim }: { sim: SimResult }) {
-  if (!sim.estimable) return <p className="mt-3 rounded-lg bg-surface-2 p-3 text-sm text-ink-2">{sim.note}</p>;
-  return (
-    <div className="mt-3 space-y-2 rounded-lg bg-surface-2 p-3 text-sm">
-      {sim.prevented.length > 0 || sim.detectable.length === 0 ? (
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-semibold text-ok">예방 가능 {sim.prevented.length}건</span>
-          <span className="text-ink">절감 {formatKRW(sim.savedCost)}</span>
-          <span className="text-ink-3">(추정)</span>
-        </div>
-      ) : null}
-      {sim.detectable.length > 0 && <div className="font-semibold text-info">조기 발견 가능 {sim.detectable.length}건</div>}
-      {sim.note && <p className="text-ink-2">{sim.note}</p>}
-      {sim.outOfScope.length > 0 && (
-        <ul className="space-y-0.5 text-ink-2">
-          {sim.outOfScope.map((o) => (
-            <li key={o.caseId}>
-              · {caseById.get(o.caseId)?.label}: {o.reason}
-            </li>
-          ))}
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="text-sm font-semibold text-ink-2 hover:text-ink">
+        {open ? "접기" : "부킹 기록 필수 후보 보기"} <span className="font-normal text-ink-3">(선적 서류 재작업 기록 {seed.cases.length}건에서 도출)</span>
+      </button>
+      {open && (
+        <ul className="mt-3 space-y-2">
+          {ws.candidates.map((c) => {
+            const isOn = approved.includes(c.key);
+            return (
+              <li key={c.key} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-medium text-ink">부킹 기록 · {c.label}</span>
+                <span className="text-ink-3">
+                  필수였다면 {c.preventable.length}건({formatKRW(c.preventableCost)}) 방지 · 재작업 {c.totalCases}건 중
+                </span>
+                {isOn ? (
+                  <>
+                    <Badge tone="ok">승인됨</Badge>
+                    <Button onClick={() => revoke(c.key)}>취소</Button>
+                  </>
+                ) : (
+                  <ConfirmButton label="승인" confirmLabel="필수로 승인" onConfirm={() => approve(c.key)} />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
-    </div>
+    </Card>
   );
 }

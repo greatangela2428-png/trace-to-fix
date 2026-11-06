@@ -16,7 +16,7 @@ export function redact(text: string): string {
     .replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{4}/g, "[전화번호]");
 }
 
-export const SYSTEM_PROMPT = `당신은 포워딩·물류 서류(부킹, SI, 인보이스, 패킹리스트, B/L)의 반려·수정 요청 메일을 읽고 반려 사유를 분류합니다.
+export const SYSTEM_PROMPT = `당신은 포워딩·물류 회사의 업무 보고서와 서류(운임 비교·계약 검토·클레임 보고, 부킹·SI·B/L 등)에 대한 반려·수정 요청 의견을 읽고 반려 사유를 분류합니다.
 
 사유 코드(하나만 고르세요):
 ${REASON_CODES.map((c) => `- ${c}: ${REASON_LABEL[c]}`).join("\n")}

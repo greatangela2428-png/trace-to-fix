@@ -1,5 +1,5 @@
 // KOTRA 공공데이터 연동(서비스키 없이 받는 파일 데이터). 순수 함수만 둔다.
-// - 수입규제: HS 코드·목적국으로 반덤핑·상계관세·세이프가드 대상 여부를 서류 작성 전에 점검
+// - (수출 사전 점검 탭은 2026-11-06 사용자 요청으로 삭제)
 // - 권역별 경제 지표: 보고서의 근거 없는 가정 옆에 '참고 지표'로 제시(판정 아님)
 import { z } from "zod";
 
@@ -11,23 +11,6 @@ export const DataSourceSchema = z.object({
   fetchedAt: z.string(),
 });
 export type DataSource = z.infer<typeof DataSourceSchema>;
-
-export const RegulationSchema = z.object({
-  id: z.string(),
-  country: z.string(), // 규제 시행국(ISO 2자리)
-  hs: z.array(z.string()), // 시행국 기준 HS 코드(숫자만, 4자리 이상)
-  product: z.string(),
-  measure: z.string(), // 반덤핑, 상계관세, 세이프가드, 우회수출(반덤핑) …
-  status: z.string(), // 규제중, 조사중 …
-  targets: z.array(z.string()), // 규제 대상국(한글)
-  period: z.string(),
-  duty: z.string(),
-  korea: z.boolean(), // 한국 대상 여부
-});
-export type Regulation = z.infer<typeof RegulationSchema>;
-
-export const RegulationFileSchema = z.object({ source: DataSourceSchema, rows: z.array(RegulationSchema) });
-export type RegulationFile = z.infer<typeof RegulationFileSchema>;
 
 const EconValueSchema = z.object({ value: z.number().nullable(), period: z.string().optional(), raw: z.string() });
 export const EconIndicatorSchema = z.object({
@@ -42,81 +25,6 @@ export const EconFileSchema = z.object({
   regions: z.record(z.string(), z.array(EconIndicatorSchema)),
 });
 export type EconFile = z.infer<typeof EconFileSchema>;
-
-// ── 수입규제 사전 점검 ─────────────────────────────────
-
-/** "8471.30" → "847130" */
-export const normalizeHs = (s: string) => s.replace(/\D/g, "");
-
-/** 나라마다 HS 코드 자릿수(6~10)가 달라, 국제 공통인 앞 6자리까지만 비교한다. */
-const HS_COMMON = 6;
-
-export type MatchLevel = "SAME_6" | "BROADER" | "NARROWER";
-
-export interface RegulationHit {
-  reg: Regulation;
-  level: MatchLevel; // SAME_6: 6단위 일치, BROADER: 규제가 더 넓은 분류(4단위), NARROWER: 입력이 4단위라 넓게 찾음
-  matchedCode: string;
-}
-
-function matchCode(input: string, code: string): MatchLevel | null {
-  const n = Math.min(HS_COMMON, input.length, code.length);
-  if (n < 4 || input.slice(0, n) !== code.slice(0, n)) return null;
-  if (n === HS_COMMON) return "SAME_6";
-  return code.length < input.length ? "BROADER" : "NARROWER";
-}
-
-const STATUS_ORDER = (s: string) => (s.includes("규제") ? 0 : s.includes("조사") && !s.includes("종") ? 1 : 2);
-const LEVEL_ORDER: Record<MatchLevel, number> = { SAME_6: 0, BROADER: 1, NARROWER: 2 };
-
-/**
- * HS 코드(4자리 이상)와 목적국으로 수입규제를 찾는다. 목적국을 비우면 전 세계에서 찾는다.
- * 정렬: 규제중 → 조사중 → 기타, 한국 대상 먼저, 6단위 일치 먼저.
- */
-export function findRegulations(rows: Regulation[], query: { hs: string; country?: string }): RegulationHit[] {
-  const input = normalizeHs(query.hs);
-  if (input.length < 4) return [];
-  const hits: RegulationHit[] = [];
-  for (const reg of rows) {
-    if (query.country && reg.country !== query.country) continue;
-    let best: { level: MatchLevel; code: string } | null = null;
-    for (const code of reg.hs) {
-      const level = matchCode(input, code);
-      if (level && (!best || LEVEL_ORDER[level] < LEVEL_ORDER[best.level])) best = { level, code };
-    }
-    if (best) hits.push({ reg, level: best.level, matchedCode: best.code });
-  }
-  return hits.sort(
-    (a, b) =>
-      STATUS_ORDER(a.reg.status) - STATUS_ORDER(b.reg.status) ||
-      Number(b.reg.korea) - Number(a.reg.korea) ||
-      LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level],
-  );
-}
-
-export const isActive = (r: Regulation) => STATUS_ORDER(r.status) === 0;
-export const isInvestigating = (r: Regulation) => STATUS_ORDER(r.status) === 1;
-
-/** 사전 점검 요약: 서류 작성 전에 담당자가 확인할 것. */
-export function summarizeHits(hits: RegulationHit[]) {
-  const active = hits.filter((h) => isActive(h.reg));
-  return {
-    total: hits.length,
-    active: active.length,
-    activeKorea: active.filter((h) => h.reg.korea).length,
-    investigating: hits.filter((h) => isInvestigating(h.reg)).length,
-  };
-}
-
-/** 시드 예약의 양하항 → 목적국(ISO 2자리). 실데이터 연동 시 항구 코드(UN/LOCODE)로 대체. */
-export const PORT_COUNTRY: Record<string, string> = {
-  함부르크: "DE",
-  로테르담: "NL",
-  앤트워프: "BE",
-  르아브르: "FR",
-  제노바: "IT",
-  예테보리: "SE",
-};
 
 // ── 권역별 경제 지표(가정 검증용 참고 자료) ─────────────
 

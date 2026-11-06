@@ -80,7 +80,8 @@
 }
 
 @theme inline {
-  --font-sans: "Pretendard Variable", Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-sans: "Wanted Sans Variable", "Wanted Sans", "Pretendard Variable", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --font-display: "Manrope", "Wanted Sans Variable", "Malgun Gothic", sans-serif; /* 영문 워드마크 */
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -110,7 +111,7 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   line-height: 1.65;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   word-break: keep-all; /* 한글을 단어 단위로 줄바꿈 */
   overflow-wrap: anywhere; /* 긴 영문 주소는 넘치지 않게 */
   -webkit-font-smoothing: antialiased;
@@ -185,6 +186,7 @@ body {
     break-after: page;
   }
   .pr-brand {
+    font-family: var(--font-display);
     font-size: 8pt;
     letter-spacing: 0.14em;
     color: #1b6ea8;

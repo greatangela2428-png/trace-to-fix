@@ -6,9 +6,48 @@ import { classifyReasonApi, decomposeReportApi } from "./api";
 import { simulate, type SimResult } from "./domain/patterns";
 import { initialSuggestions, patterns, traces } from "./data";
 import { seed } from "./seed";
+import { workspaceSeed } from "./seed/workspace";
+import type { EvidenceInput, EvidenceLinkInput, WorkReportInput } from "./domain/workspace";
+import { DEFAULT_WEIGHTS, type Weights } from "./domain/priority";
+import { applyMerge } from "./domain/dedupe";
 
-export type TabId = "rework" | "logic" | "docs" | "zombie" | "precheck";
-export type ZombieDecision = "PAUSE_APPROVED" | "KEEP";
+export type TabId = "home" | "write" | "vault" | "rework" | "logic" | "docs";
+
+/** 보고서 작성 도구 상태: 근거 보관함 + 보고서. 파생값(상태·점수)은 저장하지 않고 화면에서 계산한다 */
+export interface WorkspaceState {
+  evidence: EvidenceInput[];
+  reports: WorkReportInput[];
+  approvedRequired: string[]; // 승인된 저장 필수 항목 키("report|포함 항목", "booking|consigneeAddress") — 재작업 역추적에서 승인
+  clockOffsetDays: number; // 시연용: 기준일을 며칠 넘겨 근거 만료·마감 임박을 보여 준다
+  weights: Weights; // 우선순위 가중치(초기 가정, 홈에서 조정)
+}
+
+/** 보고서를 열면 첫 주장을 바로 골라 둔다(근거 패널이 비어 보이지 않게) */
+const firstClaimId = (r: WorkReportInput | undefined) => r?.sections.flatMap((s) => s.claims)[0]?.id ?? null;
+
+const mapClaim = (
+  reports: WorkReportInput[],
+  reportId: string,
+  claimId: string,
+  fn: (links: EvidenceLinkInput[]) => EvidenceLinkInput[],
+): WorkReportInput[] =>
+  reports.map((r) =>
+    r.id !== reportId
+      ? r
+      : {
+          ...r,
+          sections: r.sections.map((s) => ({
+            ...s,
+            claims: s.claims.map((c) => (c.id === claimId ? { ...c, evidenceLinks: fn(c.evidenceLinks) } : c)),
+          })),
+        },
+  );
+/** 읽히지 않는 보고서·항목 결정: 유지 / 3개월 시범 중단(수신자 확인 후) / 표본 감사(유지하되 일부만 점검) */
+export type ZombieDecision = "PAUSE_APPROVED" | "KEEP" | "SAMPLE_AUDIT";
+export const ZOMBIE_DECISION_LABEL: Record<ZombieDecision, string> = { PAUSE_APPROVED: "3개월 시범 중단", KEEP: "유지", SAMPLE_AUDIT: "표본 감사" };
+export type DocDecision = "LINK_APPROVED" | "KEEP_SEPARATE";
+/** 확인 요청 응답: 확인함 / 수정할게요 / 문제없음(무시, 로그에만) */
+export type CheckAction = "ack" | "fix" | "dismiss";
 
 interface AppState {
   tab: TabId;
@@ -41,9 +80,37 @@ interface AppState {
   decideZombie: (procedureId: string, decision: ZombieDecision) => void;
   undoZombie: (procedureId: string) => void;
 
-  // 수출 사전 점검: 마지막 조회 조건(보고서 내보내기에 포함)
-  precheckQuery: { hs: string; country: string };
-  setPrecheckQuery: (q: Partial<{ hs: string; country: string }>) => void;
+  // ③ 동일 내용 문서: 원본 연결(참조만)은 사람이 승인해야 반영된다
+  docDecisions: Record<string, { decision: DocDecision; at: string }>;
+  decideDoc: (pairKey: string, decision: DocDecision) => void;
+  undoDoc: (pairKey: string) => void;
+  /** 병합 승인: 보관함 근거를 대표로 묶고 모든 보고서 링크를 대표로 바꾼다. 되돌릴 수 있게 직전 상태를 남긴다 */
+  mergeEvidence: (pairKey: string, canonicalId: string, memberId: string, chosen: Record<string, string | number>) => void;
+  mergeLog: Record<string, { before: Pick<WorkspaceState, "evidence" | "reports">; repointed: { reportId: string; claimId: string }[] }>;
+
+  // 보고서 작성 도구
+  ws: WorkspaceState;
+  saveEvidence: (e: EvidenceInput) => void;
+  updateSectionText: (reportId: string, sectionId: string, text: string) => void;
+  updateDeadline: (reportId: string, deadline: string) => void;
+  shiftClock: (days: number) => void;
+  setWeights: (w: Partial<Weights>) => void;
+  approveRequired: (key: string) => void;
+  revokeRequired: (key: string) => void;
+  linkEvidence: (reportId: string, claimId: string, link: EvidenceLinkInput) => void;
+  unlinkEvidence: (reportId: string, claimId: string, evidenceId: string) => void;
+  selected: { reportId: string; claimId: string | null };
+  checkLog: Record<string, { action: CheckAction; at: string }>;
+  respondCheck: (itemKey: string, action: CheckAction) => void;
+  undoCheck: (itemKey: string) => void;
+  editingEvidenceId: string | null;
+  // 상단 지표를 누르면 해당 화면에서 그 목록을 펼친다
+  focus: "dueThisWeek" | "weak" | null;
+  setFocus: (f: "dueThisWeek" | "weak" | null) => void;
+  setEditingEvidence: (id: string | null) => void;
+  selectReport: (reportId: string) => void;
+  selectClaim: (claimId: string | null) => void;
+
 }
 
 export type AiReasonState =
@@ -64,17 +131,17 @@ const SAMPLE_LOGIC: LogicState = { source: "sample", report: seed.report, unveri
 
 const now = () => new Date().toISOString();
 
-const TAB_IDS: TabId[] = ["rework", "logic", "docs", "zombie", "precheck"];
+const TAB_IDS: TabId[] = ["home", "write", "vault", "rework", "logic", "docs"];
 const tabFromHash = (): TabId => {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
-  return (TAB_IDS as string[]).includes(h) ? (h as TabId) : "rework";
+  return (TAB_IDS as string[]).includes(h) ? (h as TabId) : "home";
 };
 
 export const useApp = create<AppState>()((set, get) => ({
-  tab: tabFromHash(), // #zombie 처럼 주소로 탭을 바로 열 수 있다
+  tab: tabFromHash(), // #write 처럼 주소로 탭을 바로 열 수 있다
   setTab: (tab) => {
     if (typeof history !== "undefined") history.replaceState(null, "", `#${tab}`);
-    set({ tab });
+    set({ tab, focus: null }); // 탭을 옮기면 지표 상세 목록은 닫는다(지표 버튼은 옮긴 뒤 다시 연다)
   },
 
   selectedCaseId: traces[0]?.caseId ?? null,
@@ -146,8 +213,84 @@ export const useApp = create<AppState>()((set, get) => ({
   },
   loadSampleReport: () => set({ logic: SAMPLE_LOGIC }),
 
-  precheckQuery: { hs: "7225.11", country: "DE" },
-  setPrecheckQuery: (q) => set((st) => ({ precheckQuery: { ...st.precheckQuery, ...q } })),
+  docDecisions: {},
+  decideDoc: (pairKey, decision) => set((st) => ({ docDecisions: { ...st.docDecisions, [pairKey]: { decision, at: now() } } })),
+  undoDoc: (pairKey) =>
+    set((st) => {
+      const next = { ...st.docDecisions };
+      delete next[pairKey];
+      const log = st.mergeLog[pairKey];
+      if (!log) return { docDecisions: next };
+      const restLog = { ...st.mergeLog };
+      delete restLog[pairKey];
+      // 병합을 되돌리면 보관함·링크를 직전 상태로
+      return { docDecisions: next, mergeLog: restLog, ws: { ...st.ws, evidence: log.before.evidence, reports: log.before.reports } };
+    }),
+  mergeLog: {},
+  mergeEvidence: (pairKey, canonicalId, memberId, chosen) =>
+    set((st) => {
+      const m = applyMerge(st.ws.evidence, st.ws.reports, canonicalId, memberId, chosen);
+      return {
+        ws: { ...st.ws, evidence: m.evidence, reports: m.reports },
+        docDecisions: { ...st.docDecisions, [pairKey]: { decision: "LINK_APPROVED", at: now() } },
+        mergeLog: { ...st.mergeLog, [pairKey]: { before: { evidence: st.ws.evidence, reports: st.ws.reports }, repointed: m.repointed } },
+      };
+    }),
+
+  ws: { evidence: workspaceSeed.evidenceInputs, reports: workspaceSeed.reportInputs, approvedRequired: [], clockOffsetDays: 0, weights: DEFAULT_WEIGHTS },
+  updateSectionText: (reportId, sectionId, text) =>
+    set((st) => ({
+      ws: {
+        ...st.ws,
+        reports: st.ws.reports.map((r) =>
+          r.id !== reportId
+            ? r
+            : {
+                ...r,
+                sections: r.sections.map((s) =>
+                  s.id !== sectionId ? s : { ...s, text, status: text.trim() === "" ? "empty" : s.status === "empty" ? "draft" : s.status },
+                ),
+              },
+        ),
+      },
+    })),
+  updateDeadline: (reportId, deadline) =>
+    set((st) => ({ ws: { ...st.ws, reports: st.ws.reports.map((r) => (r.id === reportId ? { ...r, deadline } : r)) } })),
+  shiftClock: (days) => set((st) => ({ ws: { ...st.ws, clockOffsetDays: Math.max(0, st.ws.clockOffsetDays + days) } })),
+  setWeights: (w) => set((st) => ({ ws: { ...st.ws, weights: { ...st.ws.weights, ...w } } })),
+  approveRequired: (key) =>
+    set((st) => (st.ws.approvedRequired.includes(key) ? st : { ws: { ...st.ws, approvedRequired: [...st.ws.approvedRequired, key] } })),
+  revokeRequired: (key) => set((st) => ({ ws: { ...st.ws, approvedRequired: st.ws.approvedRequired.filter((k) => k !== key) } })),
+  saveEvidence: (e) =>
+    set((st) => {
+      const exists = st.ws.evidence.some((x) => x.id === e.id);
+      return { ws: { ...st.ws, evidence: exists ? st.ws.evidence.map((x) => (x.id === e.id ? e : x)) : [...st.ws.evidence, e] } };
+    }),
+  linkEvidence: (reportId, claimId, link) =>
+    set((st) => ({
+      ws: {
+        ...st.ws,
+        reports: mapClaim(st.ws.reports, reportId, claimId, (ls) => (ls.some((l) => l.evidenceId === link.evidenceId && l.field === link.field) ? ls : [...ls, link])),
+      },
+    })),
+  unlinkEvidence: (reportId, claimId, evidenceId) =>
+    set((st) => ({ ws: { ...st.ws, reports: mapClaim(st.ws.reports, reportId, claimId, (ls) => ls.filter((l) => l.evidenceId !== evidenceId)) } })),
+  selected: { reportId: workspaceSeed.reportInputs[0]?.id ?? "", claimId: firstClaimId(workspaceSeed.reportInputs[0]) },
+  selectReport: (reportId) => set((st) => ({ selected: { reportId, claimId: firstClaimId(st.ws.reports.find((r) => r.id === reportId)) } })),
+  selectClaim: (claimId) => set((st) => ({ selected: { ...st.selected, claimId } })),
+  checkLog: {},
+  respondCheck: (itemKey, action) => set((st) => ({ checkLog: { ...st.checkLog, [itemKey]: { action, at: now() } } })),
+  undoCheck: (itemKey) =>
+    set((st) => {
+      const next = { ...st.checkLog };
+      delete next[itemKey];
+      return { checkLog: next };
+    }),
+  editingEvidenceId: null,
+  focus: null,
+  setFocus: (focus) => set({ focus }),
+  setEditingEvidence: (editingEvidenceId) => set({ editingEvidenceId }),
+
 
   zombieDecisions: {},
   decideZombie: (procedureId, decision) =>

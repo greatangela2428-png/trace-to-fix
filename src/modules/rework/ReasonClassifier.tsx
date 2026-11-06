@@ -16,7 +16,7 @@ export function ReasonClassifier({ caseId, text, existing }: { caseId: string; t
   return (
     <div className="mt-5 space-y-3 border-t border-line pt-4">
       <div>
-        <div className="text-sm text-ink-3">반려 메일</div>
+        <div className="text-sm text-ink-3">반려 의견</div>
         <blockquote className="mt-1 border-l-2 border-line pl-3 text-ink-2">“{text}”</blockquote>
         {existing && (
           <div className="mt-1.5 text-sm text-ink-3">
@@ -33,7 +33,7 @@ export function ReasonClassifier({ caseId, text, existing }: { caseId: string; t
 
       {st?.status === "loading" && (
         <p className="text-ink-2" role="status">
-          AI가 반려 메일을 읽고 있어요…
+          AI가 반려 의견을 읽고 있어요…
         </p>
       )}
 

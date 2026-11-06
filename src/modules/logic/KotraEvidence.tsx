@@ -5,7 +5,7 @@ import { detectRegions, indicatorsFor, suspiciousYears, topicsOf, type EconIndic
 import type { Report } from "../../domain/schemas";
 import { econ } from "../../data/kotra";
 import { Badge, Card, CardTitle, NeedsReview } from "../../components/ui";
-import { SourceNote } from "../precheck/PrecheckTab";
+import { SourceNote } from "../../components/SourceNote";
 
 const RECENT = 3; // 최근 몇 해를 보여 줄지
 

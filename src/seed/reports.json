@@ -1,0 +1,247 @@
+[
+  {
+    "id": "R-SWITCH",
+    "title": "유럽 항로 A 선사 전환 검토",
+    "type": "contract_decision",
+    "audience": "임원",
+    "deadline": "2026-11-10T18:00:00+09:00",
+    "appliesFrom": "2027-01-01",
+    "impactBasis": {
+      "label": "현 선사 기준 연간 운임",
+      "volume": { "evidenceId": "E-SHIP-2026", "field": "연간 물동량" },
+      "rate": { "evidenceId": "E-CONTRACT-CUR", "field": "현 선사 40ft 운임" },
+      "fxKrwPerUsd": 1350
+    },
+    "sections": [
+      {
+        "id": "S1",
+        "title": "결론",
+        "text": "2027년 1분기부터 유럽 항로 주력 선사를 현 선사에서 A 선사로 전환한다.",
+        "status": "done",
+        "claims": []
+      },
+      {
+        "id": "S2",
+        "title": "비용 비교",
+        "text": "A 선사의 부산-로테르담 40ft 운임은 USD 1,850으로 현 선사(USD 2,100) 대비 약 12% 저렴하다. 환율이 1,350원 수준을 유지하므로 유럽 항로 전체에서 연간 약 1억 2천만 원을 절감할 수 있다.",
+        "status": "draft",
+        "claims": [
+          {
+            "id": "CL1",
+            "text": "A 선사 40ft 운임은 USD 1,850으로 현 선사 대비 약 12% 저렴하다",
+            "quote": "A 선사의 부산-로테르담 40ft 운임은 USD 1,850으로 현 선사(USD 2,100) 대비 약 12% 저렴하다.",
+            "asserts": [
+              { "key": "A 선사 40ft 운임", "value": 1850, "unit": "USD/FEU" },
+              { "key": "현 선사 40ft 운임", "value": 2100, "unit": "USD/FEU" }
+            ],
+            "scope": ["부산-로테르담"],
+            "evidenceLinks": [
+              { "evidenceId": "E-RATE-A-Q3", "field": "A 선사 40ft 운임", "impactType": "direction" },
+              { "evidenceId": "E-MAIL-A", "field": "A 선사 40ft 운임", "impactType": "direction" },
+              { "evidenceId": "E-CONTRACT-CUR", "field": "현 선사 40ft 운임", "impactType": "direction" }
+            ]
+          },
+          {
+            "id": "CL2",
+            "text": "환율 1,350원 유지 시 유럽 항로 전체에서 연간 약 1억 2천만 원을 절감한다",
+            "quote": "환율이 1,350원 수준을 유지하므로 유럽 항로 전체에서 연간 약 1억 2천만 원을 절감할 수 있다.",
+            "asserts": [{ "key": "연간 절감액", "value": 120000000, "unit": "KRW" }],
+            "scope": ["유럽 항로"],
+            "evidenceLinks": [
+              { "evidenceId": "E-SHIP-2026", "field": "연간 물동량", "impactType": "magnitude" },
+              { "evidenceId": "E-RATE-A-Q3", "field": "A 선사 40ft 운임", "impactType": "magnitude" },
+              { "evidenceId": "E-CONTRACT-CUR", "field": "현 선사 40ft 운임", "impactType": "magnitude" }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "S3",
+        "title": "서비스 품질",
+        "text": "A 선사의 정시 도착률은 92%로 현 선사보다 높다.",
+        "status": "draft",
+        "claims": [
+          {
+            "id": "CL3",
+            "text": "A 선사의 정시 도착률은 92%로 현 선사보다 높다",
+            "quote": "A 선사의 정시 도착률은 92%로 현 선사보다 높다.",
+            "asserts": [{ "key": "정시 도착률", "value": 92, "unit": "%" }],
+            "scope": ["유럽 항로"],
+            "evidenceLinks": [{ "evidenceId": "E-PROMO-A", "field": "정시 도착률", "impactType": "magnitude" }]
+          }
+        ]
+      },
+      {
+        "id": "S4",
+        "title": "대안 비교",
+        "text": "",
+        "status": "empty",
+        "claims": []
+      }
+    ]
+  },
+  {
+    "id": "R-CLAIM",
+    "title": "한빛전자 11월 BAF 차액 정산 요청",
+    "type": "claim",
+    "audience": "고객",
+    "deadline": "2026-11-07T12:00:00+09:00",
+    "impactBasis": {
+      "label": "BAF 차액 정산 금액",
+      "volume": { "evidenceId": "E-HANBIT-NOV", "field": "11월 선적량" },
+      "rate": { "evidenceId": "E-D1", "field": "BAF" },
+      "rateMinus": { "evidenceId": "E-D2", "field": "BAF" },
+      "fxKrwPerUsd": 1350
+    },
+    "sections": [
+      {
+        "id": "S1",
+        "title": "청구 근거",
+        "text": "11월 한빛전자 선적분에는 BAF USD 215가 적용되었습니다. 11월 선적량은 48 FEU입니다.",
+        "status": "draft",
+        "claims": [
+          {
+            "id": "CC1",
+            "text": "11월 적용 BAF는 USD 215이다",
+            "quote": "11월 한빛전자 선적분에는 BAF USD 215가 적용되었습니다.",
+            "asserts": [{ "key": "BAF", "value": 215, "unit": "USD/FEU" }],
+            "scope": ["부산-로테르담"],
+            "evidenceLinks": [
+              { "evidenceId": "E-D1", "field": "BAF", "impactType": "direction" },
+              { "evidenceId": "E-D2", "field": "BAF", "impactType": "direction" }
+            ]
+          },
+          {
+            "id": "CC2",
+            "text": "11월 선적량은 48 FEU이다",
+            "quote": "11월 선적량은 48 FEU입니다.",
+            "asserts": [{ "key": "11월 선적량", "value": 48, "unit": "FEU" }],
+            "scope": ["부산-로테르담"],
+            "evidenceLinks": [{ "evidenceId": "E-HANBIT-NOV", "field": "11월 선적량", "impactType": "magnitude" }]
+          }
+        ]
+      },
+      {
+        "id": "S2",
+        "title": "정산 금액",
+        "text": "차액 USD 17에 48 FEU를 곱한 금액을 정산 금액으로 제시합니다.",
+        "status": "draft",
+        "claims": [
+          {
+            "id": "CC3",
+            "text": "정산 금액은 차액 USD 17 × 48 FEU이다",
+            "quote": "차액 USD 17에 48 FEU를 곱한 금액을 정산 금액으로 제시합니다.",
+            "asserts": [{ "key": "BAF 차액", "value": 17, "unit": "USD/FEU" }],
+            "scope": ["부산-로테르담"],
+            "evidenceLinks": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "R-REWORK",
+    "title": "9~10월 보고서 반려 현황",
+    "type": "management",
+    "audience": "팀장",
+    "deadline": "2026-11-12T18:00:00+09:00",
+    "procedureId": "P5",
+    "sections": [
+      {
+        "id": "S1",
+        "title": "현황",
+        "text": "9~10월 보고서 반려는 13건, 재작업 비용은 1,775,000원입니다. 근거 저장 단계에서 시작된 반려가 6건으로 가장 많습니다.",
+        "status": "done",
+        "claims": [
+          {
+            "id": "CR1",
+            "text": "보고서 반려 13건, 재작업 비용 1,775,000원",
+            "quote": "9~10월 보고서 반려는 13건, 재작업 비용은 1,775,000원입니다.",
+            "asserts": [
+              { "key": "반려 건수", "value": 13, "unit": "건" },
+              { "key": "재작업 비용 합계", "value": 1775000, "unit": "KRW" }
+            ],
+            "scope": [],
+            "evidenceLinks": [
+              { "evidenceId": "E-REWORK-LOG", "field": "반려 건수", "impactType": "magnitude" },
+              { "evidenceId": "E-REWORK-LOG", "field": "재작업 비용 합계", "impactType": "magnitude" }
+            ]
+          },
+          {
+            "id": "CR2",
+            "text": "근거 저장 단계에서 시작된 반려 6건이 가장 많다",
+            "quote": "근거 저장 단계에서 시작된 반려가 6건으로 가장 많습니다.",
+            "asserts": [{ "key": "근거 저장 단계 원인 건수", "value": 6, "unit": "건" }],
+            "scope": [],
+            "evidenceLinks": [{ "evidenceId": "E-REWORK-LOG", "field": "근거 저장 단계 원인 건수", "impactType": "direction" }]
+          }
+        ]
+      },
+      {
+        "id": "S2",
+        "title": "개선 계획",
+        "text": "",
+        "status": "empty",
+        "claims": []
+      }
+    ]
+  },
+  {
+    "id": "R-WEEKLY",
+    "title": "주간 선복 현황(11월 2주)",
+    "type": "regular_status",
+    "audience": "팀장",
+    "deadline": "2026-11-06T17:00:00+09:00",
+    "procedureId": "P4",
+    "sections": [
+      {
+        "id": "S1",
+        "title": "선복 사용",
+        "text": "11월 1주 유럽 항로 선복은 40 FEU를 배정받아 35 FEU를 사용했습니다.",
+        "status": "draft",
+        "claims": [
+          {
+            "id": "CW1",
+            "text": "유럽 항로 선복 40 FEU 배정, 35 FEU 사용",
+            "quote": "11월 1주 유럽 항로 선복은 40 FEU를 배정받아 35 FEU를 사용했습니다.",
+            "asserts": [
+              { "key": "배정 선복", "value": 40, "unit": "FEU" },
+              { "key": "사용 선복", "value": 35, "unit": "FEU" }
+            ],
+            "scope": ["유럽 항로"],
+            "evidenceLinks": [
+              { "evidenceId": "E-SPACE-W45", "field": "배정 선복", "impactType": "magnitude" },
+              { "evidenceId": "E-SPACE-W45", "field": "사용 선복", "impactType": "magnitude" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "R-THC",
+    "title": "동남아 항로 THC 인상 고객 안내",
+    "type": "management",
+    "audience": "고객",
+    "deadline": "2026-11-14T18:00:00+09:00",
+    "appliesFrom": "2026-12-01",
+    "sections": [
+      {
+        "id": "S1",
+        "title": "안내 내용",
+        "text": "2026년 12월부터 부산-호찌민, 부산-방콕 항로 THC가 KRW 195,000으로 인상됩니다.",
+        "status": "done",
+        "claims": [
+          {
+            "id": "CT1",
+            "text": "12월부터 부산-호찌민·방콕 THC는 KRW 195,000이다",
+            "quote": "2026년 12월부터 부산-호찌민, 부산-방콕 항로 THC가 KRW 195,000으로 인상됩니다.",
+            "asserts": [{ "key": "THC", "value": 195000, "unit": "KRW" }],
+            "scope": ["부산-호찌민", "부산-방콕"],
+            "evidenceLinks": [{ "evidenceId": "E-D4", "field": "THC", "impactType": "direction" }]
+          }
+        ]
+      }
+    ]
+  }
+]
